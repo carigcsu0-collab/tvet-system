@@ -33,12 +33,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy composer files first for better layer caching
-COPY backend-laravel/composer.json backend-laravel/composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
 # Copy backend application code
 COPY backend-laravel/ .
+
+# Install PHP dependencies
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
