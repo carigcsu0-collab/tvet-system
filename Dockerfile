@@ -33,11 +33,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copy composer files first for better layer caching
-COPY composer.json composer.lock ./
+COPY backend-laravel/composer.json backend-laravel/composer.lock ./
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Copy application code
-COPY . .
+# Copy backend application code
+COPY backend-laravel/ .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -45,7 +45,7 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Configure Apache document root
-COPY apache.conf /etc/apache2/sites-available/000-default.conf
+COPY backend-laravel/apache.conf /etc/apache2/sites-available/000-default.conf
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -54,7 +54,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 EXPOSE 80
 
 # Entrypoint
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY backend-laravel/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

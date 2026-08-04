@@ -4,7 +4,6 @@ services:
     runtime: docker
     repo: https://github.com/carigcsu0-collab/tvet-system.git
     branch: main
-    rootDir: backend-laravel
     dockerfilePath: ./Dockerfile
     autoDeploy: true
     plan: starter

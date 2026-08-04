@@ -1,0 +1,10 @@
+.git
+.venv
+.devin
+frontend
+*.ps1
+*.docx
+*.md
+mysql-setup.sql
+docker-compose.yml
+render.yaml
