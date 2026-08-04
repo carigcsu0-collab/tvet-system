@@ -1,0 +1,40 @@
+name: tvet_documents
+description: TVET document generator
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.4.1
+  provider: ^6.1.2
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.5
+  intl: ^0.19.0
+  pdf: ^3.10.7
+  printing: ^5.11.1
+  file_picker: ^8.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/fonts/
+
+  fonts:
+    - family: Arial
+      fonts:
+        - asset: assets/fonts/arial.ttf
+        - asset: assets/fonts/arialbd.ttf
+          weight: 700
+    - family: Checkmark
+      fonts:
+        - asset: assets/fonts/checkmark.ttf

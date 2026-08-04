@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: tvet_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tdms
+      MYSQL_USER: tvet
+      MYSQL_PASSWORD: tvetpass
+      MYSQL_ROOT_PASSWORD: tvetrootpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

@@ -1,0 +1,35 @@
+# Environment / secrets
+.env
+.env.backup
+.env.production
+.env.local
+*.key
+auth.json
+
+# Python
+/.venv
+
+# Build / cache
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+**/storage/pail
+**/.phpactor.json
+**/.phpunit.result.cache
+**/Homestead.json
+**/Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# IDEs
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# OS files
+.DS_Store
+Thumbs.db

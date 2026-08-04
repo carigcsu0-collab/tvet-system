@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: tvet-backend
+    runtime: docker
+    # Replace with your actual repo after pushing to GitHub
+    repo: https://github.com/YOUR_USERNAME/tvet-system.git
+    branch: main
+    rootDir: backend-laravel
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    plan: starter
+    envVars:
+      - key: APP_NAME
+        value: "TVET Documents"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_TIMEZONE
+        value: Asia/Manila
+      - key: APP_URL
+        value: https://tvet-backend.onrender.com
+      - key: BCRYPT_ROUNDS
+        value: "12"
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: debug
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        value: tdms
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      # Sensitive values should be set via Render dashboard or envVarGroups
+      # - key: DB_HOST
+      #   sync: false
+      # - key: DB_USERNAME
+      #   sync: false
+      # - key: DB_PASSWORD
+      #   sync: false
+      # - key: APP_KEY
+      #   sync: false

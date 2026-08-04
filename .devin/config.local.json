@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(php)",
+      "Exec(flutter analyze)",
+      "Exec(Select-String)",
+      "Exec(Write-Output)",
+      "Exec(ls)",
+      "Exec(Get-Command soffice)",
+      "Exec(powershell)"
+    ]
+  }
+}
