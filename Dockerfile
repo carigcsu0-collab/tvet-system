@@ -2,6 +2,7 @@ FROM php:8.2-apache
 
 # Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
+    libicu-dev \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
