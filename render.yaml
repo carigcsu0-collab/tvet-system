@@ -2,8 +2,7 @@ services:
   - type: web
     name: tvet-backend
     runtime: docker
-    # Replace with your actual repo after pushing to GitHub
-    repo: https://github.com/YOUR_USERNAME/tvet-system.git
+    repo: https://github.com/carigcsu0-collab/tvet-system.git
     branch: main
     rootDir: backend-laravel
     dockerfilePath: ./Dockerfile
