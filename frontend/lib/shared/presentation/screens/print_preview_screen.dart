@@ -798,6 +798,8 @@ class _LetterContent extends StatelessWidget {
         payload['coordinator_name']?.toString() ??
         '';
     final coordinatorTitle = payload['coordinatorTitle']?.toString() ?? 'Campus TVET Coordinator';
+    final greetings = payload['greetings']?.toString() ?? 'Sir:';
+    final footerBody = payload['footerBody']?.toString() ?? '';
 
     const bodyStyle = TextStyle(
       fontFamily: 'CenturyGothic',
@@ -853,7 +855,7 @@ class _LetterContent extends StatelessWidget {
             style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
           ),
         const SizedBox(height: 16),
-        const Text('Sir:', textAlign: TextAlign.justify, style: bodyStyle),
+        Text(greetings, textAlign: TextAlign.justify, style: bodyStyle),
         const SizedBox(height: 4),
         const Text(
           'Greetings!',
@@ -974,6 +976,14 @@ class _LetterContent extends StatelessWidget {
             ],
           ),
         ),
+        if (footerBody.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            footerBody,
+            textAlign: TextAlign.justify,
+            style: bodyStyle,
+          ),
+        ],
       ],
     );
   }

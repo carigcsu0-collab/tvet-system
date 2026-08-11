@@ -54,7 +54,8 @@ class DocumentController extends Controller
         ]);
 
         if (isset($validated['payload'])) {
-            $validated['payload'] = array_merge($record->payload ?? [], $validated['payload']);
+            // Replace payload entirely so removed fields are cleared
+            $record->payload = $validated['payload'];
         }
 
         $record->fill($validated);

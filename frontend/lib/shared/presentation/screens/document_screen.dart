@@ -47,6 +47,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
   final List<TextEditingController> _controllers = [];
   final _codeController = TextEditingController();
   final _dateController = TextEditingController();
+  final _greetingsController = TextEditingController(text: 'Sir:');
   DateTime _date = DateTime.now();
   String? _coordinator;
   String _coordinatorTitle = 'TVET Coordinator';
@@ -57,6 +58,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
   bool _generating = false;
   Map<String, dynamic>? _generated;
   List<Map<String, String>>? _table;
+  String? _existingCode;
+  bool _isEditMode = false;
 
   @override
   void initState() {
@@ -66,6 +69,37 @@ class _DocumentScreenState extends State<DocumentScreen> {
     }
     _dateController.text = DateFormat('MMMM dd, yyyy').format(_date);
     _loadData();
+  }
+
+  void _enterEditMode(String code, Map<String, dynamic> payload) {
+    setState(() {
+      _isEditMode = true;
+      _existingCode = code;
+      _codeController.text = code;
+      if (payload['date'] != null) {
+        _dateController.text = payload['date'].toString();
+      }
+      if (payload['greetings'] != null) {
+        _greetingsController.text = payload['greetings'].toString();
+      }
+      for (int i = 0; i < widget.fields.length; i++) {
+        final name = widget.fields[i].name;
+        if (payload[name] != null) {
+          _controllers[i].text = payload[name].toString();
+        }
+      }
+      if (payload['coordinatorName'] != null) {
+        _coordinator = payload['coordinatorName'].toString();
+      }
+      if (payload['coordinatorTitle'] != null) {
+        _coordinatorTitle = payload['coordinatorTitle'].toString();
+      }
+      if (payload['table'] != null) {
+        _table = (payload['table'] as List<dynamic>)
+            .map((e) => Map<String, String>.from(e as Map))
+            .toList();
+      }
+    });
   }
 
   Future<void> _loadData() async {
@@ -108,6 +142,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
         payload[widget.fields[i].name] = _controllers[i].text.trim();
       }
       payload['date'] = _dateController.text.trim();
+      payload['greetings'] = _greetingsController.text.trim();
       if (_selectedSignatoryName.isNotEmpty) {
         payload['coordinatorName'] = _selectedSignatoryName;
         payload['coordinatorTitle'] = _selectedDesignations.isNotEmpty
@@ -120,13 +155,39 @@ class _DocumentScreenState extends State<DocumentScreen> {
       if (widget.allowTable && _table != null) {
         payload['table'] = _table;
       }
-      final res = await ApiClient.post(
-        '/documents/${widget.slug}',
-        data: payload,
-      );
-      setState(() => _generated = res.data as Map<String, dynamic>);
-      recordsRefresh.refresh();
-      _loadData();
+      if (_isEditMode && _existingCode != null) {
+        // Update existing record — keep the same code
+        payload['code'] = _existingCode;
+        await ApiClient.put(
+          '/documents/$_existingCode',
+          data: {'payload': payload},
+        );
+        recordsRefresh.refresh();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Document updated successfully')),
+          );
+        }
+      } else {
+        // Create new record
+        final res = await ApiClient.post(
+          '/documents/${widget.slug}',
+          data: payload,
+        );
+        final record = res.data as Map<String, dynamic>;
+        setState(() {
+          _generated = record;
+          _isEditMode = true;
+          _existingCode = record['code']?.toString();
+        });
+        recordsRefresh.refresh();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e')),
+        );
+      }
     } finally {
       setState(() => _generating = false);
     }
@@ -189,6 +250,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
   void dispose() {
     _codeController.dispose();
     _dateController.dispose();
+    _greetingsController.dispose();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -356,6 +418,17 @@ class _DocumentScreenState extends State<DocumentScreen> {
                         ),
                       );
                     }),
+                    // Greetings field (editable)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+                      child: TextFormField(
+                        controller: _greetingsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Greetings',
+                          hintText: 'e.g. Sir: / Madam:',
+                        ),
+                      ),
+                    ),
                     // Table appears above the footer body
                     if (widget.allowTable) ...[
                       const SizedBox(height: AppTheme.spaceLg),
@@ -410,15 +483,19 @@ class _DocumentScreenState extends State<DocumentScreen> {
                                 ),
                               )
                             : const Icon(Icons.save),
-                        label: Text(_generating ? 'Saving...' : 'Save Document'),
+                        label: Text(_generating
+                            ? 'Saving...'
+                            : _isEditMode
+                                ? 'Update Document'
+                                : 'Save Document'),
                       ),
                     ),
-                    if (_generated != null) ...[
+                    if (_generated != null || _isEditMode) ...[
                       const SizedBox(height: AppTheme.spaceLg),
                       SuccessCard(
-                        code: _generated!['code']?.toString() ?? '',
+                        code: _existingCode ?? _generated!['code']?.toString() ?? '',
                         onView: () {
-                          final code = _generated!['code']?.toString() ?? '';
+                          final code = _existingCode ?? _generated!['code']?.toString() ?? '';
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => PrintPreviewScreen(code: code),
