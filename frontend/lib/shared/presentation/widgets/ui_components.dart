@@ -313,7 +313,12 @@ class UniversityLetterhead extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.school, size: 40, color: accent),
+          Image.network(
+            'https://csu.edu.ph/img/csulogo_index.png',
+            height: 40,
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(Icons.school, size: 40, color: accent),
+          ),
           const SizedBox(height: 4),
           const Text('Republic of the Philippines',
               style: TextStyle(fontSize: 11)),

@@ -249,6 +249,7 @@ class _PeiScreenState extends State<PeiScreen> {
                   children: [
                     const SectionHeader(
                       icon: Icons.rate_review_outlined,
+                      imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                       title: 'Performance Evaluation Instrument',
                       subtitle:
                           'TESDA-OP-CO-04-F29 (Candidate) & F30 (AC Manager)',

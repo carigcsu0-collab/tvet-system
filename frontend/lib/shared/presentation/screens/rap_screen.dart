@@ -251,6 +251,7 @@ class _RapScreenState extends State<RapScreen> {
                   children: [
                     const SectionHeader(
                       icon: Icons.fact_check_outlined,
+                      imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                       title: 'Report on Assessment Proceedings',
                       subtitle:
                           'TESDA-OP-CO-05-F34 — header fields and narrative',

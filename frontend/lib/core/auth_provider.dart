@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
@@ -21,7 +22,6 @@ class AuthProvider extends ChangeNotifier {
     final remember = prefs.getBool('remember_me') ?? false;
     if (!remember) {
       await prefs.remove('token');
-      await prefs.remove('remember_me');
       _rememberedEmail = null;
       notifyListeners();
       return;
@@ -29,18 +29,28 @@ class AuthProvider extends ChangeNotifier {
     final stored = prefs.getString('token');
     if (stored != null && stored.isNotEmpty) {
       ApiClient.setToken(stored);
+      // Trust the token immediately so user stays logged in
+      // even if the server is cold-starting on Render
+      _token = stored;
+      _isAuthenticated = true;
+      notifyListeners();
+      // Validate in background — only clear on 401, not network errors
       try {
         await ApiClient.get('/auth/me');
-        _token = stored;
-        _isAuthenticated = true;
-      } catch (e) {
-        _token = null;
-        _rememberedEmail = null;
-        ApiClient.setToken(null);
-        await prefs.remove('token');
-        await prefs.remove('remembered_email');
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401) {
+          _token = null;
+          _isAuthenticated = false;
+          _rememberedEmail = null;
+          ApiClient.setToken(null);
+          await prefs.remove('token');
+          await prefs.remove('remembered_email');
+          await prefs.remove('remember_me');
+          notifyListeners();
+        }
+      } catch (_) {
+        // Network error, server cold start, etc. — keep session alive
       }
-      notifyListeners();
     }
   }
 

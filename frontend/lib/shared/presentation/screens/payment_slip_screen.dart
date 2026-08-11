@@ -248,6 +248,7 @@ class _PaymentSlipScreenState extends State<PaymentSlipScreen> {
             children: [
               const SectionHeader(
                 icon: Icons.receipt_long,
+                imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                 title: 'Payment Slip',
                 subtitle: 'Create a payment slip for assessment or training fees',
               ),

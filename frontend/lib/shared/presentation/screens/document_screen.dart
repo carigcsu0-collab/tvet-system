@@ -325,6 +325,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                     if (widget.allowTable) ...[
                       const SectionHeader(
                         icon: Icons.table_chart,
+                        imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                         title: 'Table (optional)',
                         subtitle: 'Add tabular data to the document',
                       ),

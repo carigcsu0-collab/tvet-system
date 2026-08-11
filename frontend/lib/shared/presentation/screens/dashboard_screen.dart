@@ -170,6 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Document status section
                 const SectionHeader(
                   icon: Icons.fact_check,
+                  imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                   title: 'Document Status',
                   subtitle: 'Overview of document workflow stages',
                 ),
@@ -189,6 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Center status section
                 const SectionHeader(
                   icon: Icons.business,
+                  imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                   title: 'Center Status',
                   subtitle: 'Assessment and training center overview',
                 ),
@@ -208,6 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Upcoming assessments
                 const SectionHeader(
                   icon: Icons.event,
+                  imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                   title: 'Upcoming Assessments / Training',
                   subtitle: 'Scheduled assessments in the coming days',
                 ),
@@ -251,6 +254,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Center qualifications with expiration
                 const SectionHeader(
                   icon: Icons.verified,
+                  imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                   title: 'Center Qualifications & Expiration',
                   subtitle: 'Track qualification validity and renewal dates',
                 ),
@@ -325,6 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Price list
                 const SectionHeader(
                   icon: Icons.payments,
+                  imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                   title: 'Qualification Price List',
                   subtitle: 'Assessment and training fees per qualification',
                 ),

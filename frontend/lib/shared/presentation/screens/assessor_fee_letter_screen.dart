@@ -348,6 +348,7 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                     const SizedBox(height: AppTheme.spaceMd),
                     const SectionHeader(
                       icon: Icons.table_chart,
+                      imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                       title: "Assessor's Fee",
                       subtitle: 'Generate and save the assessor fee letter',
                     ),
@@ -545,6 +546,7 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                     // Table section with styled header
                     const SectionHeader(
                       icon: Icons.table_chart,
+                      imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                       title: 'Assessor Fee Summary Table',
                       subtitle: 'Generate the fee table from assessment records',
                     ),
@@ -641,6 +643,7 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                     // Footer body section
                     const SectionHeader(
                       icon: Icons.edit_note,
+                      imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                       title: 'Closing Remarks (Optional)',
                       subtitle: 'Additional content after the fee table',
                     ),
