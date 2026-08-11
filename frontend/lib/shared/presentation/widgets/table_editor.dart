@@ -29,7 +29,7 @@ class _TableEditorState extends State<TableEditor> {
     super.initState();
     _enabled = widget.initialTable != null && widget.initialTable!.isNotEmpty;
     _headers = List.from(_defaultHeaders);
-    _rows = [List.filled(_defaultHeaders.length, '')];
+    _rows = [List.generate(_defaultHeaders.length, (_) => '')];
     if (_enabled) {
       _headers = (widget.initialTable!.first.keys).toList();
       _rows = widget.initialTable!
@@ -56,7 +56,7 @@ class _TableEditorState extends State<TableEditor> {
 
   void _addRow() {
     setState(() {
-      _rows.add(List.filled(_headers.length, ''));
+      _rows.add(List.generate(_headers.length, (_) => ''));
     });
     _notify();
   }
@@ -64,7 +64,7 @@ class _TableEditorState extends State<TableEditor> {
   void _removeRow(int index) {
     setState(() {
       _rows.removeAt(index);
-      if (_rows.isEmpty) _rows.add(List.filled(_headers.length, ''));
+      if (_rows.isEmpty) _rows.add(List.generate(_headers.length, (_) => ''));
     });
     _notify();
   }
