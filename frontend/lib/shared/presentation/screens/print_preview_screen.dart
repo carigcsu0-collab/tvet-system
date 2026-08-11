@@ -578,27 +578,41 @@ class _DocumentPreview extends StatelessWidget {
     final sidebarWidthPx = widthPx * 0.20;
     // Logo height scales with page size (58px for A4 width 595px)
     final logoHeight = 58.0 * (widthPx / 793.3); // 793.3 = A4 width in px
+    // Content left start = sidebar + left margin
+    final contentLeftPx = sidebarWidthPx + leftMarginPx;
+    // 1.5 inch in px for sidebar bottom spacing
+    final sidebarBottomSpacing = 1.5 * PdfPageFormat.inch * 1.333;
 
     return Container(
       width: widthPx,
       color: Colors.white,
       child: Stack(
         children: [
+          // Sidebar fills the entire left side, full height
           Positioned(
             left: 0,
             top: 0,
             bottom: 0,
             width: sidebarWidthPx,
-            child: _buildSidebar(sidebarWidthPx),
+            child: _buildSidebar(sidebarWidthPx, sidebarBottomSpacing),
           ),
+          // Bottom art at bottom-right corner
           Positioned(
             right: 0,
             bottom: 0,
             child: _buildBottomArt(sidebarWidthPx),
           ),
+          // Footer aligned with logo position (left = contentLeftPx)
+          Positioned(
+            left: contentLeftPx,
+            bottom: bottomMarginPx * 0.3,
+            right: rightMarginPx,
+            child: _buildFooter(),
+          ),
+          // Main content area
           Padding(
             padding: EdgeInsets.fromLTRB(
-              leftMarginPx + sidebarWidthPx,
+              contentLeftPx,
               topMarginPx,
               rightMarginPx,
               bottomMarginPx,
@@ -607,7 +621,7 @@ class _DocumentPreview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildHeader(logoHeight),
+                _buildHeader(logoHeight, leftMarginPx),
                 const SizedBox(height: 6),
                 const Divider(color: Color(0xFF808080), thickness: 0.8),
                 const SizedBox(height: 14),
@@ -620,8 +634,6 @@ class _DocumentPreview extends StatelessWidget {
                         payload: payload,
                         code: code,
                       ),
-                const SizedBox(height: 24),
-                _buildFooter(),
               ],
             ),
           ),
@@ -630,7 +642,7 @@ class _DocumentPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(double logoHeight) {
+  Widget _buildHeader(double logoHeight, double logoSpacing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -648,7 +660,7 @@ class _DocumentPreview extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: logoSpacing),
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -745,7 +757,7 @@ class _DocumentPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebar(double widthPx) {
+  Widget _buildSidebar(double widthPx, double bottomSpacing) {
     final scale = widthPx / 119.4;
     final body = TextStyle(
       fontFamily: 'Monotype Corsiva',
@@ -793,7 +805,7 @@ class _DocumentPreview extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(12 * (widthPx / 119.4), 60 * (widthPx / 119.4), 26 * (widthPx / 119.4), 20 * (widthPx / 119.4)),
+            padding: EdgeInsets.fromLTRB(12 * scale, 60 * scale, 26 * scale, bottomSpacing),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
