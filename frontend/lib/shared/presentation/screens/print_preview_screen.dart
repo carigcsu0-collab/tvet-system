@@ -29,6 +29,27 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   bool _loading = true;
   bool _exporting = false;
   String? _error;
+  String _selectedPageSize = 'A4';
+
+  static const _mm = PdfPageFormat.mm;
+  static const _paperSizes = <String, PdfPageFormat>{
+    'A0': PdfPageFormat(841 * _mm, 1189 * _mm),
+    'A1': PdfPageFormat(594 * _mm, 841 * _mm),
+    'A2': PdfPageFormat(420 * _mm, 594 * _mm),
+    'A3': PdfPageFormat(297 * _mm, 420 * _mm),
+    'A4': PdfPageFormat.a4,
+    'A5': PdfPageFormat(148 * _mm, 210 * _mm),
+    'A6': PdfPageFormat(105 * _mm, 148 * _mm),
+    'B0': PdfPageFormat(1000 * _mm, 1414 * _mm),
+    'B1': PdfPageFormat(707 * _mm, 1000 * _mm),
+    'B2': PdfPageFormat(500 * _mm, 707 * _mm),
+    'B3': PdfPageFormat(353 * _mm, 500 * _mm),
+    'B4': PdfPageFormat(250 * _mm, 353 * _mm),
+    'B5': PdfPageFormat(176 * _mm, 250 * _mm),
+    'B6': PdfPageFormat(125 * _mm, 176 * _mm),
+    'Letter': PdfPageFormat.letter,
+    'Legal': PdfPageFormat.legal,
+  };
 
   @override
   void initState() {
@@ -335,7 +356,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
   Future<void> _printPdf() async {
     try {
-      final pdfBytes = await _buildPdfBytes();
+      final format = _paperSizes[_selectedPageSize] ?? PdfPageFormat.a4;
+      final pdfBytes = await _buildPdfBytes(format: format);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
       );
@@ -347,7 +369,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   Future<void> _exportPdf() async {
     setState(() => _exporting = true);
     try {
-      final pdfBytes = await _buildPdfBytes();
+      final format = _paperSizes[_selectedPageSize] ?? PdfPageFormat.a4;
+      final pdfBytes = await _buildPdfBytes(format: format);
       final safeName = widget.code.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
       final outputPath = await FilePicker.platform.saveFile(
         dialogTitle: 'Save PDF',
@@ -418,6 +441,29 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: DropdownButton<String>(
+              value: _selectedPageSize,
+              underline: const SizedBox.shrink(),
+              icon: const Icon(Icons.format_size, size: 20),
+              items: _paperSizes.keys.map((size) {
+                final fmt = _paperSizes[size]!;
+                return DropdownMenuItem(
+                  value: size,
+                  child: Text(
+                    '$size (${(fmt.width / PdfPageFormat.inch).toStringAsFixed(1)}" × ${(fmt.height / PdfPageFormat.inch).toStringAsFixed(1)}")',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedPageSize = value);
+                }
+              },
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.print),
             tooltip: 'Print (PDF)',
