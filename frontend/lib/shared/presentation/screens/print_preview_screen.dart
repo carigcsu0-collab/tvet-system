@@ -238,7 +238,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ],
       pw.SizedBox(height: 32),
       pw.Text('Very respectfully yours,', style: bodyStyle),
-      pw.SizedBox(height: 72),
       pw.Text(coordinator, style: boldStyle),
       pw.Text(coordinatorTitle,
           style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
@@ -1253,7 +1252,6 @@ class _LetterContent extends StatelessWidget {
             children: [
               const Text('Very respectfully yours,',
                   textAlign: TextAlign.left, style: bodyStyle),
-              const SizedBox(height: 96),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 300),
                 child: Column(
