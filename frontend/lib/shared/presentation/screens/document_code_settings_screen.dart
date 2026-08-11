@@ -257,6 +257,7 @@ class _DocumentCodeSettingsScreenState
             children: [
               const SectionHeader(
                 icon: Icons.tag,
+                imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
                 title: 'Document Code Settings',
                 subtitle: 'Codes are saved and auto-increment for new documents',
                 trailing: Icon(Icons.refresh, size: 20),

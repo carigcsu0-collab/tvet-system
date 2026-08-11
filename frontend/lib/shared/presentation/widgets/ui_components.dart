@@ -4,6 +4,7 @@ import '../../../core/app_theme.dart';
 // Section header with icon, title, subtitle, and accent border
 class SectionHeader extends StatelessWidget {
   final IconData icon;
+  final String? imageUrl;
   final String title;
   final String? subtitle;
   final Widget? trailing;
@@ -11,6 +12,7 @@ class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.icon,
+    this.imageUrl,
     required this.title,
     this.subtitle,
     this.trailing,
@@ -43,7 +45,15 @@ class SectionHeader extends StatelessWidget {
               color: accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Icon(icon, size: 18, color: accent),
+            child: imageUrl != null
+                ? Image.network(
+                    imageUrl!,
+                    width: 18,
+                    height: 18,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(icon, size: 18, color: accent),
+                  )
+                : Icon(icon, size: 18, color: accent),
           ),
           const SizedBox(width: 10),
           Expanded(

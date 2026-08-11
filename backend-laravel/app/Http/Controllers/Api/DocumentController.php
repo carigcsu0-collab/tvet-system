@@ -326,13 +326,16 @@ class DocumentController extends Controller
                 ->where('year', $year)
                 ->max(DB::raw('CAST(SUBSTRING_INDEX(code, "-", -1) AS UNSIGNED)'));
 
-            $number = $maxUsedNumber + 1;
-
-            // Keep DocumentSequence in sync
             $seq = DocumentSequence::where('document_type_id', $type->id)
                 ->where('year', $year)
                 ->lockForUpdate()
                 ->first();
+
+            $savedNext = $seq?->next_number ?? 1;
+
+            // Use the higher of (last used + 1) and (saved next_number)
+            // so settings are respected but we never overwrite existing documents
+            $number = max($maxUsedNumber + 1, $savedNext);
 
             if ($seq) {
                 $seq->next_number = $number + 1;
