@@ -1,11 +1,22 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 import 'core/app_theme.dart';
 import 'core/auth_provider.dart';
 import 'main_shell.dart';
 import 'shared/presentation/screens/login_screen.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows) {
+    await windowManager.ensureInitialized();
+    await windowManager.waitUntilReadyToShow();
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    windowManager.show();
+  }
+  runApp(const MyApp());
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

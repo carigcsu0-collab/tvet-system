@@ -18,6 +18,7 @@ import 'shared/presentation/screens/pei_screen.dart';
 import 'shared/presentation/screens/rap_screen.dart';
 import 'shared/presentation/screens/users_screen.dart';
 import 'shared/presentation/widgets/app_nav_drawer.dart';
+import 'shared/presentation/widgets/window_title_bar.dart';
 import 'main.dart';
 
 // Keys to reload lists when their tab is selected.
@@ -114,52 +115,59 @@ class _MainShellState extends State<MainShell> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titles[_selectedIndex]),
-        actions: [
-          if (_selectedIndex == 8)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh records',
-              onPressed: refreshRecords,
+    return Column(
+      children: [
+        WindowTitleBar(title: 'TVET Documents - ${titles[_selectedIndex]}'),
+        Expanded(
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(titles[_selectedIndex]),
+              actions: [
+                if (_selectedIndex == 8)
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Refresh records',
+                    onPressed: refreshRecords,
+                  ),
+                IconButton(
+                  icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                  tooltip: isDark ? 'Light mode' : 'Dark mode',
+                  onPressed: () {
+                    context.findAncestorStateOfType<MyAppState>()?.toggleTheme();
+                  },
+                ),
+              ],
             ),
-          IconButton(
-            icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
-            tooltip: isDark ? 'Light mode' : 'Dark mode',
-            onPressed: () {
-              context.findAncestorStateOfType<MyAppState>()?.toggleTheme();
-            },
+            drawer: AppNavDrawer(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (i) {
+                setState(() {
+                  _selectedIndex = i;
+                  _visitedTabs.add(i);
+                });
+                Navigator.pop(context);
+                if (i == 8) {
+                  _documentRecordsKey.currentState?.load();
+                } else if (i == 12) {
+                  _assessmentKey.currentState?.load();
+                } else if (i == 13) {
+                  _trainingKey.currentState?.load();
+                }
+              },
+            ),
+            body: ChangeNotifierProvider.value(
+              value: _recordsRefresh,
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  for (int i = 0; i < screens.length; i++)
+                    _visitedTabs.contains(i) ? screens[i] : const SizedBox.shrink(),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
-      drawer: AppNavDrawer(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) {
-          setState(() {
-            _selectedIndex = i;
-            _visitedTabs.add(i);
-          });
-          Navigator.pop(context);
-          if (i == 8) {
-            _documentRecordsKey.currentState?.load();
-          } else if (i == 12) {
-            _assessmentKey.currentState?.load();
-          } else if (i == 13) {
-            _trainingKey.currentState?.load();
-          }
-        },
-      ),
-      body: ChangeNotifierProvider.value(
-        value: _recordsRefresh,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            for (int i = 0; i < screens.length; i++)
-              _visitedTabs.contains(i) ? screens[i] : const SizedBox.shrink(),
-          ],
         ),
-      ),
+      ],
     );
   }
 }

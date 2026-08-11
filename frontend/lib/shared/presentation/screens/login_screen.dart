@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/app_theme.dart';
 import '../../../core/auth_provider.dart';
+import '../widgets/window_title_bar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,8 +56,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+    return Column(
+      children: [
+        const WindowTitleBar(title: 'TVET Documents - Login'),
+        Expanded(
+          child: Scaffold(
+            body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -222,7 +227,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
+        ),
+            ),
+          ),
+      ],
     );
   }
 }
