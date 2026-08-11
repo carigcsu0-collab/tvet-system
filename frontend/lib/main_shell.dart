@@ -42,6 +42,7 @@ class _MainShellState extends State<MainShell> {
     FieldConfig(name: 'from', label: 'Thru (Office)'),
     FieldConfig(name: 'subject', label: 'Subject'),
     FieldConfig(name: 'body', label: 'Body', maxLines: 5),
+    FieldConfig(name: 'footerBody', label: 'Footer Body (Optional)', maxLines: 3),
   ];
 
   final List<FieldConfig> _externalFields = const [
@@ -50,6 +51,7 @@ class _MainShellState extends State<MainShell> {
     FieldConfig(name: 'address', label: 'Address'),
     FieldConfig(name: 'subject', label: 'Subject'),
     FieldConfig(name: 'body', label: 'Body', maxLines: 5),
+    FieldConfig(name: 'footerBody', label: 'Footer Body (Optional)', maxLines: 3),
   ];
 
   @override

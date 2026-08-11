@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "tvet_documents" "\0"
+            VALUE "FileDescription", "TVET Documents" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "tvet_documents" "\0"
+            VALUE "InternalName", "TVET Documents" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "tvet_documents.exe" "\0"
-            VALUE "ProductName", "tvet_documents" "\0"
+            VALUE "ProductName", "TVET Documents" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

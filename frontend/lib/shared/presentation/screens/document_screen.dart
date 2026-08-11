@@ -339,6 +339,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       final f = widget.fields[i];
                       final isTo = f.name == 'to' || f.name == 'recipient';
                       final isBody = f.name == 'body';
+                      final isFooter = f.name == 'footerBody';
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                         child: TextFormField(
@@ -359,7 +360,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
                           textAlign: isBody
                               ? TextAlign.justify
                               : TextAlign.start,
-                          validator: f.name == 'from' || f.name == 'subject'
+                          validator: f.name == 'from' ||
+                                  f.name == 'subject' ||
+                                  isFooter
                               ? null
                               : (v) => v == null || v.trim().isEmpty
                                   ? 'Required'
