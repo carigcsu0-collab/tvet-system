@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -64,21 +65,272 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   }
 
   Future<Uint8List> _buildPdfBytes({PdfPageFormat? format}) async {
-    final bytes = await _captureImage();
+    final pageFormat = format ?? PdfPageFormat.a4;
     final pdf = pw.Document();
-    final imageProvider = pw.MemoryImage(bytes);
+
+    pw.MemoryImage? logoImage;
+    try {
+      final logoBytes = await rootBundle.load('assets/csu_logo.png');
+      logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
+    } catch (_) {}
+
+    final payload = (_record!['payload'] as Map<String, dynamic>?) ?? {};
+    final type = _record!['document_type'] as Map<String, dynamic>?;
+    final slug = type?['slug']?.toString() ?? '';
+    final code = _record!['code']?.toString() ?? '';
+
+    const inch = PdfPageFormat.inch;
+
     pdf.addPage(
-      pw.Page(
-        pageFormat: format ?? PdfPageFormat.a4,
-        build: (context) => pw.Center(
-          child: pw.Image(
-            imageProvider,
-            fit: pw.BoxFit.contain,
-          ),
-        ),
+      pw.MultiPage(
+        pageFormat: pageFormat,
+        margin: pw.EdgeInsets.fromLTRB(0.5 * inch, 0.5 * inch, 0.5 * inch, 0.75 * inch),
+        footer: (context) => _buildPdfFooter(),
+        build: (context) => [
+          _buildPdfHeader(logoImage),
+          pw.Divider(thickness: 0.8, color: PdfColors.grey),
+          pw.SizedBox(height: 14),
+          if (slug == 'certificate-of-appearance')
+            ..._buildPdfCertificateContent(payload, code)
+          else
+            ..._buildPdfLetterContent(payload, code),
+        ],
       ),
     );
+
     return pdf.save();
+  }
+
+  pw.Widget _buildPdfHeader(pw.MemoryImage? logoImage) {
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
+      children: [
+        if (logoImage != null) pw.Image(logoImage, height: 58),
+        pw.SizedBox(width: 10),
+        pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text('Republic of the Philippines',
+                  style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+              pw.Text('CAGAYAN STATE UNIVERSITY',
+                  style: pw.TextStyle(
+                      fontSize: 15,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.grey800)),
+              pw.Text('CARIG CAMPUS',
+                  style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+              pw.SizedBox(height: 2),
+              pw.Text('Carig Sur, Tuguegarao City, Cagayan',
+                  style: pw.TextStyle(fontSize: 8.5, color: PdfColors.grey600)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildPdfFooter() {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(top: 4),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text('Website: http://www.csucarig.edu.ph',
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.blue)),
+          pw.Text('Email Address: tvet@csucarig.edu.ph',
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.blue)),
+          pw.Text('Local No. 042',
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.black)),
+        ],
+      ),
+    );
+  }
+
+  List<pw.Widget> _buildPdfLetterContent(Map<String, dynamic> payload, String code) {
+    final date = payload['date']?.toString() ??
+        payload['issued_at']?.toString() ??
+        '';
+    final to = payload['to']?.toString() ??
+        payload['recipient']?.toString() ??
+        '';
+    final toDetail = payload['organization']?.toString() ??
+        payload['recipient_office']?.toString() ??
+        '';
+    final address = payload['address']?.toString() ??
+        payload['recipient_address']?.toString() ??
+        '';
+    final from = payload['from']?.toString() ??
+        payload['campus_name']?.toString() ??
+        '';
+    final subject = payload['subject']?.toString() ?? '';
+    final body = payload['body']?.toString() ?? '';
+    final table = payload['table'] as List<dynamic>?;
+    final coordinator = payload['coordinatorName']?.toString() ??
+        payload['coordinator_name']?.toString() ??
+        '';
+    final coordinatorTitle = payload['coordinatorTitle']?.toString() ?? 'Campus TVET Coordinator';
+    final greetings = payload['greetings']?.toString() ?? 'Sir:';
+    final footerBody = payload['footerBody']?.toString() ?? '';
+
+    const bodyStyle = pw.TextStyle(fontSize: 12, color: PdfColors.black, height: 1.6);
+    const boldStyle = pw.TextStyle(
+        fontSize: 12, color: PdfColors.black, height: 1.6, fontWeight: pw.FontWeight.bold);
+
+    return [
+      pw.Text(code,
+          style: pw.TextStyle(
+              fontSize: 12, color: PdfColors.green, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 16),
+      if (date.isNotEmpty) pw.Text(date, style: bodyStyle),
+      pw.SizedBox(height: 20),
+      if (to.isNotEmpty) pw.Text(to, style: boldStyle),
+      if (toDetail.isNotEmpty) ...[
+        pw.SizedBox(height: 2),
+        pw.Text(toDetail, style: bodyStyle),
+      ],
+      if (address.isNotEmpty) ...[
+        pw.SizedBox(height: 2),
+        pw.Text(address, style: bodyStyle),
+      ],
+      if (from.isNotEmpty) ...[
+        pw.SizedBox(height: 16),
+        pw.Text('Thru: $from', style: boldStyle),
+      ],
+      pw.SizedBox(height: 20),
+      if (subject.isNotEmpty) pw.Text('Subject: $subject', style: boldStyle),
+      pw.SizedBox(height: 16),
+      pw.Text(greetings, style: bodyStyle),
+      pw.SizedBox(height: 4),
+      pw.Text('Greetings!',
+          style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic, color: PdfColors.black)),
+      pw.SizedBox(height: 12),
+      pw.Text(body, style: bodyStyle, textAlign: pw.TextAlign.justify),
+      if (table != null && table.isNotEmpty) ...[
+        pw.SizedBox(height: 16),
+        _buildPdfTable(table),
+      ],
+      if (footerBody.isNotEmpty) ...[
+        pw.SizedBox(height: 16),
+        pw.Text(footerBody, style: bodyStyle, textAlign: pw.TextAlign.justify),
+      ],
+      pw.SizedBox(height: 32),
+      pw.Text('Very respectfully yours,', style: bodyStyle),
+      pw.SizedBox(height: 48),
+      pw.Text(coordinator, style: boldStyle),
+      pw.Text(coordinatorTitle,
+          style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+      pw.Text('Cagayan State University',
+          style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+    ];
+  }
+
+  List<pw.Widget> _buildPdfCertificateContent(Map<String, dynamic> payload, String code) {
+    final recipient = payload['recipient_name']?.toString() ?? '';
+    final office = payload['recipient_office']?.toString() ?? '';
+    final campus = payload['campus_name']?.toString() ?? '';
+    final appearanceDate = payload['appearance_date']?.toString() ?? '';
+    final purpose = payload['purpose']?.toString() ?? '';
+    final day = payload['issued_day']?.toString() ?? '';
+    final monthYear = payload['issued_month_year']?.toString() ?? '';
+    final coordinator = payload['coordinatorName']?.toString() ??
+        payload['coordinator_name']?.toString() ??
+        '';
+    final coordinatorTitle = payload['coordinatorTitle']?.toString() ?? 'TVET Coordinator';
+
+    const bodyStyle = pw.TextStyle(fontSize: 12, color: PdfColors.black, height: 1.6);
+
+    return [
+      pw.Text(code,
+          style: pw.TextStyle(
+              fontSize: 12, color: PdfColors.green, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 16),
+      pw.Center(
+        child: pw.Text('CERTIFICATE OF APPEARANCE',
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
+      ),
+      pw.SizedBox(height: 24),
+      pw.Text(
+        'This is to certify that $recipient of $office, has appeared at $campus on $appearanceDate.',
+        style: bodyStyle,
+        textAlign: pw.TextAlign.justify,
+      ),
+      pw.SizedBox(height: 20),
+      pw.Text('Purpose of appearance:',
+          style: pw.TextStyle(
+              fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
+      pw.SizedBox(height: 6),
+      pw.Text(purpose, style: bodyStyle, textAlign: pw.TextAlign.justify),
+      pw.SizedBox(height: 24),
+      pw.Text(
+        'This certificate is issued upon request for whatever legal or official purpose it may serve.',
+        style: bodyStyle,
+        textAlign: pw.TextAlign.justify,
+      ),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        'Issued this $day day of $monthYear, at $campus.',
+        style: bodyStyle,
+        textAlign: pw.TextAlign.justify,
+      ),
+      pw.SizedBox(height: 50),
+      pw.Center(
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Text(coordinator,
+                style: pw.TextStyle(
+                    fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
+            pw.Text(coordinatorTitle,
+                style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+            pw.Text('Cagayan State University',
+                style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  pw.Widget _buildPdfTable(List<dynamic> table) {
+    final first = table.first as Map<dynamic, dynamic>?;
+    final headers = first?.keys.map((k) => k.toString()).toList() ?? [];
+
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
+      columnWidths: {
+        for (var i = 0; i < headers.length; i++)
+          i: const pw.FlexColumnWidth(1),
+      },
+      children: [
+        pw.TableRow(
+          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          children: [
+            for (final h in headers)
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(h,
+                    style: const pw.TextStyle(fontSize: 12),
+                    textAlign: pw.TextAlign.center),
+              ),
+          ],
+        ),
+        ...table.map((row) {
+          final m = row as Map<dynamic, dynamic>? ?? {};
+          return pw.TableRow(
+            children: [
+              for (final h in headers)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(6),
+                  child: pw.Text(m[h]?.toString() ?? '',
+                      style: const pw.TextStyle(fontSize: 12),
+                      textAlign: pw.TextAlign.center),
+                ),
+            ],
+          );
+        }),
+      ],
+    );
   }
 
   Future<void> _printPdf() async {
@@ -220,10 +472,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppTheme.spaceLg),
                       child: Center(
-                        child: ExcludeSemantics(
-                          child: RepaintBoundary(
-                            key: _previewKey,
-                            child: _DocumentPreview(record: _record!),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 700),
+                          child: ExcludeSemantics(
+                            child: RepaintBoundary(
+                              key: _previewKey,
+                              child: _DocumentPreview(record: _record!),
+                            ),
                           ),
                         ),
                       ),
@@ -246,7 +501,6 @@ class _DocumentPreview extends StatelessWidget {
 
     return Container(
       width: 595,
-      height: 842,
       color: Colors.white,
       child: Stack(
         children: [
@@ -265,22 +519,23 @@ class _DocumentPreview extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(136, 28, 40, 24),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(),
                 const SizedBox(height: 6),
                 const Divider(color: Color(0xFF808080), thickness: 0.8),
                 const SizedBox(height: 14),
-                Expanded(
-                  child: slug == 'certificate-of-appearance'
-                      ? _CertificateContent(
-                          payload: payload,
-                          code: code,
-                        )
-                      : _LetterContent(
-                          payload: payload,
-                          code: code,
-                        ),
-                ),
+                slug == 'certificate-of-appearance'
+                    ? _CertificateContent(
+                        payload: payload,
+                        code: code,
+                      )
+                    : _LetterContent(
+                        payload: payload,
+                        code: code,
+                      ),
+                const SizedBox(height: 24),
                 _buildFooter(),
               ],
             ),
@@ -938,7 +1193,7 @@ class _LetterContent extends StatelessWidget {
             style: bodyStyle,
           ),
         ],
-        const Spacer(),
+        const SizedBox(height: 32),
         Align(
           alignment: Alignment.centerLeft,
           child: Column(
