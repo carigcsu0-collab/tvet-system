@@ -20,12 +20,15 @@ class _TableEditorState extends State<TableEditor> {
   late List<List<String>> _rows;
 
   static const _defaultHeaders = ['Column 1', 'Column 2', 'Column 3'];
+  static const double _colWidth = 120;
+  static const double _headerColWidth = 110;
+  static const double _actionColWidth = 40;
 
   @override
   void initState() {
     super.initState();
     _enabled = widget.initialTable != null && widget.initialTable!.isNotEmpty;
-    _headers = _defaultHeaders;
+    _headers = List.from(_defaultHeaders);
     _rows = [List.filled(_defaultHeaders.length, '')];
     if (_enabled) {
       _headers = (widget.initialTable!.first.keys).toList();
@@ -114,81 +117,98 @@ class _TableEditorState extends State<TableEditor> {
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Add column'),
               ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: _addRow,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add row'),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columnSpacing: 12,
-              horizontalMargin: 8,
-              columns: [
-                for (var i = 0; i < _headers.length; i++)
-                  DataColumn(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    for (var i = 0; i < _headers.length; i++)
+                      SizedBox(
+                        width: _headerColWidth,
+                        key: ValueKey('header_$i'),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                key: ValueKey('h_$i'),
+                                initialValue: _headers[i],
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 4),
+                                  hintText: 'Column',
+                                ),
+                                onChanged: (v) {
+                                  _headers[i] = v;
+                                  _notify();
+                                },
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () => _removeColumn(i),
+                              child: const Padding(
+                                padding: EdgeInsets.only(left: 2),
+                                child: Icon(Icons.close, size: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    SizedBox(width: _actionColWidth),
+                  ],
+                ),
+                const Divider(height: 1),
+                // Data rows
+                for (var r = 0; r < _rows.length; r++) ...[
+                  Row(
+                    key: ValueKey('row_$r'),
+                    children: [
+                      for (var c = 0; c < _headers.length; c++)
                         SizedBox(
-                          width: 110,
+                          width: _colWidth,
+                          key: ValueKey('cell_${r}_$c'),
                           child: TextFormField(
-                            initialValue: _headers[i],
+                            key: ValueKey('tf_${r}_$c'),
+                            initialValue: c < _rows[r].length ? _rows[r][c] : '',
                             decoration: const InputDecoration(
                               isDense: true,
                               contentPadding: EdgeInsets.symmetric(vertical: 4),
                             ),
                             onChanged: (v) {
-                              setState(() => _headers[i] = v);
+                              if (c < _rows[r].length) {
+                                _rows[r][c] = v;
+                              }
                               _notify();
                             },
                           ),
                         ),
-                        InkWell(
-                          onTap: () => _removeColumn(i),
-                          child: const Icon(Icons.close, size: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                const DataColumn(
-                  label: Text(''),
-                ),
-              ],
-              rows: [
-                for (var r = 0; r < _rows.length; r++)
-                  DataRow(
-                    cells: [
-                      for (var c = 0; c < _rows[r].length; c++)
-                        DataCell(
-                          SizedBox(
-                            width: 120,
-                            child: TextFormField(
-                              initialValue: _rows[r][c],
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(vertical: 4),
-                              ),
-                              onChanged: (v) {
-                                setState(() => _rows[r][c] = v);
-                                _notify();
-                              },
-                            ),
-                          ),
-                        ),
-                      DataCell(
-                        IconButton(
-                          icon: const Icon(Icons.delete, size: 18),
+                      SizedBox(
+                        width: _actionColWidth,
+                        child: IconButton(
+                          icon: const Icon(Icons.delete, size: 16),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                           onPressed: () => _removeRow(r),
                         ),
                       ),
                     ],
                   ),
+                  if (r < _rows.length - 1) const Divider(height: 1),
+                ],
               ],
             ),
-          ),
-          TextButton.icon(
-            onPressed: _addRow,
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Add row'),
           ),
         ],
       ],
