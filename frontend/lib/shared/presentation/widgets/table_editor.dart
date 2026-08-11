@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class TableEditor extends StatefulWidget {
   final ValueChanged<List<Map<String, String>>?> onChanged;
   final List<Map<String, String>>? initialTable;
+  final List<String>? initialColumns;
 
   const TableEditor({
     super.key,
     required this.onChanged,
     this.initialTable,
+    this.initialColumns,
   });
 
   @override
@@ -31,7 +33,12 @@ class TableEditorState extends State<TableEditor> {
     _headers = List.from(_defaultHeaders);
     _rows = [List.generate(_defaultHeaders.length, (_) => '')];
     if (_enabled) {
-      _headers = (widget.initialTable!.first.keys).toList();
+      // Use explicit column order if provided; fall back to map keys
+      if (widget.initialColumns != null && widget.initialColumns!.isNotEmpty) {
+        _headers = List<String>.from(widget.initialColumns!);
+      } else {
+        _headers = (widget.initialTable!.first.keys).toList();
+      }
       _rows = widget.initialTable!
           .map((m) => _headers.map((h) => m[h] ?? '').toList(growable: true))
           .toList(growable: true);

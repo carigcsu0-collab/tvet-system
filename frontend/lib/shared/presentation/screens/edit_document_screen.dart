@@ -23,6 +23,7 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
   bool _saving = false;
   Map<String, dynamic>? _record;
   List<Map<String, String>>? _table;
+  List<String>? _tableColumns;
   final _editableKeys = [
     'to', 'recipient', 'organization', 'address', 'from', 'subject',
     'body', 'date', 'greetings',
@@ -56,6 +57,12 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
       if (payload['table'] != null) {
         _table = (payload['table'] as List<dynamic>)
             .map((e) => Map<String, String>.from(e as Map))
+            .toList();
+      }
+      // Load explicit column order to preserve user's arrangement
+      if (payload['tableColumns'] != null) {
+        _tableColumns = (payload['tableColumns'] as List<dynamic>)
+            .map((e) => e.toString())
             .toList();
       }
       // Load footerBody separately so it renders after table
@@ -237,6 +244,7 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
                   TableEditor(
                     key: _tableEditorKey,
                     initialTable: _table,
+                    initialColumns: _tableColumns,
                     onChanged: (table) => setState(() => _table = table),
                   ),
                   const SizedBox(height: AppTheme.spaceMd),
