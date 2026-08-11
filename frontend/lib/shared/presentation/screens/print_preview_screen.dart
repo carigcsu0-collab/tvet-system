@@ -142,13 +142,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   }
 
   pw.Widget _buildPdfHeader(pw.MemoryImage? logoImage) {
-    return pw.Row(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
-      children: [
-        if (logoImage != null) pw.Image(logoImage, height: 58),
-        pw.SizedBox(width: 10),
-        pw.Expanded(
-          child: pw.Column(
+    return pw.Center(
+      child: pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          if (logoImage != null) pw.Image(logoImage, height: 58),
+          pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
               pw.Text('Republic of the Philippines',
@@ -165,8 +165,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                   style: pw.TextStyle(fontSize: 8.5, color: PdfColors.grey600)),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -646,23 +646,23 @@ class _DocumentPreview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/csu_logo.png',
-              height: logoHeight,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(
-                  Icons.school,
-                  size: logoHeight,
-                  color: const Color(0xFF2E7D32),
-                );
-              },
-            ),
-            SizedBox(width: logoSpacing),
-            const Expanded(
-              child: Column(
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/csu_logo.png',
+                height: logoHeight,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.school,
+                    size: logoHeight,
+                    color: const Color(0xFF2E7D32),
+                  );
+                },
+              ),
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
@@ -701,8 +701,8 @@ class _DocumentPreview extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 10),
         const Center(
