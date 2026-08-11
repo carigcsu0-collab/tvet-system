@@ -32,6 +32,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   String _selectedPageSize = 'A4';
 
   static const _mm = PdfPageFormat.mm;
+  static const _inch = PdfPageFormat.inch;
   static const _paperSizes = <String, PdfPageFormat>{
     'A0': PdfPageFormat(841 * _mm, 1189 * _mm),
     'A1': PdfPageFormat(594 * _mm, 841 * _mm),
@@ -49,6 +50,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     'B6': PdfPageFormat(125 * _mm, 176 * _mm),
     'Letter': PdfPageFormat.letter,
     'Legal': PdfPageFormat.legal,
+    'Folio': PdfPageFormat(8.5 * _inch, 13 * _inch),
   };
 
   @override
@@ -238,6 +240,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ],
       pw.SizedBox(height: 32),
       pw.Text('Very respectfully yours,', style: bodyStyle),
+      pw.SizedBox(height: 2 * PdfPageFormat.mm),
       pw.Text(coordinator, style: boldStyle),
       pw.Text(coordinatorTitle,
           style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
@@ -359,9 +362,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   Future<void> _printPdf() async {
     try {
       final format = _paperSizes[_selectedPageSize] ?? PdfPageFormat.a4;
-      final pdfBytes = await _buildPdfBytes(format: format);
       await Printing.layoutPdf(
-        onLayout: (format) async => pdfBytes,
+        format: format,
+        onLayout: (format) async => _buildPdfBytes(format: format),
       );
     } catch (e) {
       _showError(e);
@@ -520,12 +523,12 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppTheme.spaceLg),
                       child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 700),
-                          child: ExcludeSemantics(
-                            child: RepaintBoundary(
-                              key: _previewKey,
-                              child: _DocumentPreview(record: _record!),
+                        child: ExcludeSemantics(
+                          child: RepaintBoundary(
+                            key: _previewKey,
+                            child: _DocumentPreview(
+                              record: _record!,
+                              pageFormat: _paperSizes[_selectedPageSize] ?? PdfPageFormat.a4,
                             ),
                           ),
                         ),
@@ -537,8 +540,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
 class _DocumentPreview extends StatelessWidget {
   final Map<String, dynamic> record;
+  final PdfPageFormat pageFormat;
 
-  const _DocumentPreview({required this.record});
+  const _DocumentPreview({required this.record, required this.pageFormat});
 
   @override
   Widget build(BuildContext context) {
@@ -547,8 +551,16 @@ class _DocumentPreview extends StatelessWidget {
     final slug = type?['slug']?.toString() ?? '';
     final code = record['code']?.toString() ?? '';
 
+    // Convert PDF points to screen pixels (1 pt = 1.333px at 96dpi)
+    final widthPx = pageFormat.width * 1.333;
+    final leftMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
+    final rightMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
+    final topMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
+    final bottomMarginPx = 0.75 * PdfPageFormat.inch * 1.333;
+    final sidebarWidthPx = 119.4;
+
     return Container(
-      width: 595,
+      width: widthPx,
       color: Colors.white,
       child: Stack(
         children: [
@@ -556,7 +568,7 @@ class _DocumentPreview extends StatelessWidget {
             left: 0,
             top: 0,
             bottom: 0,
-            width: 119.4,
+            width: sidebarWidthPx,
             child: _buildSidebar(),
           ),
           Positioned(
@@ -565,7 +577,12 @@ class _DocumentPreview extends StatelessWidget {
             child: _buildBottomArt(),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(136, 28, 40, 24),
+            padding: EdgeInsets.fromLTRB(
+              leftMarginPx + sidebarWidthPx,
+              topMarginPx,
+              rightMarginPx,
+              bottomMarginPx,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -1252,6 +1269,7 @@ class _LetterContent extends StatelessWidget {
             children: [
               const Text('Very respectfully yours,',
                   textAlign: TextAlign.left, style: bodyStyle),
+              const SizedBox(height: 5.67),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 300),
                 child: Column(
