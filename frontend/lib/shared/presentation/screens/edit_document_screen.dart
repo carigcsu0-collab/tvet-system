@@ -17,6 +17,7 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
   final _greetingsController = TextEditingController();
+  final _tableEditorKey = GlobalKey<TableEditorState>();
   final _controllers = <String, TextEditingController>{};
   bool _loading = true;
   bool _saving = false;
@@ -85,8 +86,16 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
       // Save table if edited
       if (_table != null) {
         payload['table'] = _table;
+        // Save column order explicitly
+        final headers = _tableEditorKey.currentState?.headers ?? <String>[];
+        if (headers.isNotEmpty) {
+          payload['tableColumns'] = headers;
+        }
       } else if (originalPayload['table'] != null) {
         payload['table'] = originalPayload['table'];
+        if (originalPayload['tableColumns'] != null) {
+          payload['tableColumns'] = originalPayload['tableColumns'];
+        }
       }
       await ApiClient.put(
         '/documents/${widget.code}',
@@ -226,6 +235,7 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
                   // Table editor
                   const SizedBox(height: AppTheme.spaceMd),
                   TableEditor(
+                    key: _tableEditorKey,
                     initialTable: _table,
                     onChanged: (table) => setState(() => _table = table),
                   ),

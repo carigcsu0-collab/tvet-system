@@ -11,10 +11,10 @@ class TableEditor extends StatefulWidget {
   });
 
   @override
-  State<TableEditor> createState() => _TableEditorState();
+  State<TableEditor> createState() => TableEditorState();
 }
 
-class _TableEditorState extends State<TableEditor> {
+class TableEditorState extends State<TableEditor> {
   late bool _enabled;
   late List<String> _headers;
   late List<List<String>> _rows;
@@ -43,6 +43,7 @@ class _TableEditorState extends State<TableEditor> {
       widget.onChanged(null);
       return;
     }
+    // Use a LinkedHashMap to preserve insertion order
     final out = <Map<String, String>>[];
     for (final cells in _rows) {
       final row = <String, String>{};
@@ -53,6 +54,8 @@ class _TableEditorState extends State<TableEditor> {
     }
     widget.onChanged(out);
   }
+
+  List<String> get headers => _enabled ? List.from(_headers) : <String>[];
 
   void _addRow() {
     setState(() {

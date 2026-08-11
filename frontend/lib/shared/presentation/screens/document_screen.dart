@@ -44,6 +44,7 @@ class DocumentScreen extends StatefulWidget {
 
 class _DocumentScreenState extends State<DocumentScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _tableEditorKey = GlobalKey<TableEditorState>();
   final List<TextEditingController> _controllers = [];
   final _codeController = TextEditingController();
   final _dateController = TextEditingController();
@@ -154,6 +155,11 @@ class _DocumentScreenState extends State<DocumentScreen> {
       }
       if (widget.allowTable && _table != null) {
         payload['table'] = _table;
+        // Save column order explicitly to preserve user's arrangement
+        final headers = _tableEditorKey.currentState?.headers ?? <String>[];
+        if (headers.isNotEmpty) {
+          payload['tableColumns'] = headers;
+        }
       }
       if (_isEditMode && _existingCode != null) {
         // Update existing record — keep the same code
@@ -440,6 +446,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       ),
                       const SizedBox(height: AppTheme.spaceSm),
                       TableEditor(
+                        key: _tableEditorKey,
                         onChanged: (table) => setState(() => _table = table),
                       ),
                       const SizedBox(height: AppTheme.spaceLg),

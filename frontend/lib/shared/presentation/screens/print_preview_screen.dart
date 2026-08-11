@@ -187,6 +187,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     final subject = payload['subject']?.toString() ?? '';
     final body = payload['body']?.toString() ?? '';
     final table = payload['table'] as List<dynamic>?;
+    final tableColumns = payload['tableColumns'] as List<dynamic>?;
     final coordinator = payload['coordinatorName']?.toString() ??
         payload['coordinator_name']?.toString() ??
         '';
@@ -229,7 +230,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       pw.Text(body, style: bodyStyle, textAlign: pw.TextAlign.justify),
       if (table != null && table.isNotEmpty) ...[
         pw.SizedBox(height: 16),
-        _buildPdfTable(table),
+        _buildPdfTable(table, tableColumns),
       ],
       if (footerBody.isNotEmpty) ...[
         pw.SizedBox(height: 16),
@@ -237,7 +238,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ],
       pw.SizedBox(height: 32),
       pw.Text('Very respectfully yours,', style: bodyStyle),
-      pw.SizedBox(height: 48),
+      pw.SizedBox(height: 72),
       pw.Text(coordinator, style: boldStyle),
       pw.Text(coordinatorTitle,
           style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
@@ -313,9 +314,11 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     ];
   }
 
-  pw.Widget _buildPdfTable(List<dynamic> table) {
-    final first = table.first as Map<dynamic, dynamic>?;
-    final headers = first?.keys.map((k) => k.toString()).toList() ?? [];
+  pw.Widget _buildPdfTable(List<dynamic> table, [List<dynamic>? tableColumns]) {
+    // Use explicit column order if available; fall back to map keys
+    final headers = (tableColumns != null && tableColumns.isNotEmpty)
+        ? tableColumns.map((k) => k.toString()).toList()
+        : (table.first as Map<dynamic, dynamic>?)?.keys.map((k) => k.toString()).toList() ?? [];
 
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
@@ -1092,6 +1095,7 @@ class _LetterContent extends StatelessWidget {
     final subject = payload['subject']?.toString() ?? '';
     final body = payload['body']?.toString() ?? '';
     final table = payload['table'] as List<dynamic>?;
+    final tableColumns = payload['tableColumns'] as List<dynamic>?;
     final image = payload['image']?.toString() ??
         payload['image_url']?.toString() ??
         '';
@@ -1178,9 +1182,10 @@ class _LetterContent extends StatelessWidget {
           const SizedBox(height: 16),
           Builder(
             builder: (context) {
-              final first = table.first as Map<dynamic, dynamic>?;
-              final headers =
-                  first?.keys.map((k) => k.toString()).toList() ?? [];
+              // Use explicit column order if available; fall back to map keys
+              final headers = (tableColumns != null && tableColumns.isNotEmpty)
+                  ? tableColumns.map((k) => k.toString()).toList()
+                  : (table.first as Map<dynamic, dynamic>?)?.keys.map((k) => k.toString()).toList() ?? [];
               return Table(
                 border: TableBorder.all(
                   color: Colors.black,
@@ -1246,17 +1251,15 @@ class _LetterContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 32),
               const Text('Very respectfully yours,',
                   textAlign: TextAlign.left, style: bodyStyle),
-              const SizedBox(height: 48),
+              const SizedBox(height: 96),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 300),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 50),
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
