@@ -366,10 +366,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
                         subtitle: 'Add tabular data to the document',
                       ),
                       const SizedBox(height: AppTheme.spaceSm),
-                      Center(
-                        child: TableEditor(
-                          onChanged: (table) => setState(() => _table = table),
-                        ),
+                      TableEditor(
+                        onChanged: (table) => setState(() => _table = table),
                       ),
                       const SizedBox(height: AppTheme.spaceLg),
                     ],
