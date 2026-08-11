@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_theme.dart';
+import '../widgets/table_editor.dart';
 import '../widgets/ui_components.dart';
 
 class EditDocumentScreen extends StatefulWidget {
@@ -20,9 +21,10 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
   bool _loading = true;
   bool _saving = false;
   Map<String, dynamic>? _record;
+  List<Map<String, String>>? _table;
   final _editableKeys = [
     'to', 'recipient', 'organization', 'address', 'from', 'subject',
-    'body', 'footerBody', 'date', 'greetings',
+    'body', 'date', 'greetings',
     'coordinatorName', 'coordinatorTitle',
   ];
 
@@ -49,6 +51,17 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
       if (!_controllers.containsKey('greetings')) {
         _controllers['greetings'] = TextEditingController(text: 'Sir:');
       }
+      // Load table from payload
+      if (payload['table'] != null) {
+        _table = (payload['table'] as List<dynamic>)
+            .map((e) => Map<String, String>.from(e as Map))
+            .toList();
+      }
+      // Load footerBody separately so it renders after table
+      if (payload['footerBody'] != null) {
+        _controllers['footerBody'] =
+            TextEditingController(text: payload['footerBody']?.toString() ?? '');
+      }
       _record = record;
     } catch (e) {
       _record = null;
@@ -69,8 +82,10 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
       for (final entry in _controllers.entries) {
         payload[entry.key] = entry.value.text.trim();
       }
-      // Preserve table if it exists
-      if (originalPayload['table'] != null) {
+      // Save table if edited
+      if (_table != null) {
+        payload['table'] = _table;
+      } else if (originalPayload['table'] != null) {
         payload['table'] = originalPayload['table'];
       }
       await ApiClient.put(
@@ -153,9 +168,10 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
                         v == null || v.trim().isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: AppTheme.spaceLg),
-                  ..._controllers.entries.map((entry) {
+                  // Render non-footer fields (to, from, subject, body, etc.)
+                  ..._controllers.entries.where((e) =>
+                      e.key != 'footerBody' && e.key != 'greetings').map((entry) {
                     final isBody = entry.key == 'body';
-                    final isFooter = entry.key == 'footerBody';
                     final isReadOnly = entry.key == 'code' ||
                         entry.key == 'year' ||
                         entry.key == 'coordinatorName' ||
@@ -168,9 +184,7 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
                       'from': 'Thru (Office)',
                       'subject': 'Subject',
                       'body': 'Body',
-                      'footerBody': 'Footer Body (Optional)',
                       'date': 'Date',
-                      'greetings': 'Greetings',
                       'coordinatorName': 'Signatory Name',
                       'coordinatorTitle': 'Signatory Title',
                     };
@@ -184,19 +198,52 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
                         decoration: InputDecoration(
                           labelText: label,
                         ),
-                        maxLines: isBody ? 8 : (isFooter ? 3 : null),
-                        minLines: isBody ? 5 : (isFooter ? 1 : null),
-                        keyboardType: (isBody || isFooter)
+                        maxLines: isBody ? 8 : null,
+                        minLines: isBody ? 5 : null,
+                        keyboardType: isBody
                             ? TextInputType.multiline
                             : TextInputType.text,
                         textAlign: isBody ? TextAlign.justify : TextAlign.start,
-                        validator: isFooter || isReadOnly
+                        validator: isReadOnly
                             ? null
                             : (v) =>
                                 v == null || v.trim().isEmpty ? 'Required' : null,
                       ),
                     );
                   }),
+                  // Greetings field
+                  if (_controllers.containsKey('greetings'))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+                      child: TextFormField(
+                        controller: _controllers['greetings'],
+                        decoration: const InputDecoration(
+                          labelText: 'Greetings',
+                          hintText: 'e.g. Sir: / Madam:',
+                        ),
+                      ),
+                    ),
+                  // Table editor
+                  const SizedBox(height: AppTheme.spaceMd),
+                  TableEditor(
+                    initialTable: _table,
+                    onChanged: (table) => setState(() => _table = table),
+                  ),
+                  const SizedBox(height: AppTheme.spaceMd),
+                  // Footer body field after table
+                  if (_controllers.containsKey('footerBody'))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+                      child: TextFormField(
+                        controller: _controllers['footerBody'],
+                        decoration: const InputDecoration(
+                          labelText: 'Footer Body (Optional)',
+                        ),
+                        maxLines: 3,
+                        minLines: 1,
+                        keyboardType: TextInputType.multiline,
+                      ),
+                    ),
                   const SizedBox(height: AppTheme.spaceMd),
                   SizedBox(
                     width: double.infinity,

@@ -930,6 +930,14 @@ class _LetterContent extends StatelessWidget {
             errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
           ),
         ],
+        if (footerBody.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            footerBody,
+            textAlign: TextAlign.justify,
+            style: bodyStyle,
+          ),
+        ],
         const Spacer(),
         Align(
           alignment: Alignment.centerLeft,
@@ -976,14 +984,6 @@ class _LetterContent extends StatelessWidget {
             ],
           ),
         ),
-        if (footerBody.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(
-            footerBody,
-            textAlign: TextAlign.justify,
-            style: bodyStyle,
-          ),
-        ],
       ],
     );
   }

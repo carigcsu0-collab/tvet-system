@@ -33,8 +33,8 @@ class _TableEditorState extends State<TableEditor> {
     if (_enabled) {
       _headers = (widget.initialTable!.first.keys).toList();
       _rows = widget.initialTable!
-          .map((m) => _headers.map((h) => m[h] ?? '').toList())
-          .toList();
+          .map((m) => _headers.map((h) => m[h] ?? '').toList(growable: true))
+          .toList(growable: true);
     }
   }
 
