@@ -104,10 +104,27 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     const inch = PdfPageFormat.inch;
 
+    // Load sidebar and bottom art images
+    pw.MemoryImage? sidebarImage;
+    pw.MemoryImage? buildingImage;
+    pw.MemoryImage? eagleImage;
+    try {
+      final sbBytes = await rootBundle.load('assets/side_bar.png');
+      sidebarImage = pw.MemoryImage(sbBytes.buffer.asUint8List());
+    } catch (_) {}
+    try {
+      final bBytes = await rootBundle.load('assets/csu_building.png');
+      buildingImage = pw.MemoryImage(bBytes.buffer.asUint8List());
+    } catch (_) {}
+    try {
+      final eBytes = await rootBundle.load('assets/csu_eagle.png');
+      eagleImage = pw.MemoryImage(eBytes.buffer.asUint8List());
+    } catch (_) {}
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: pageFormat,
-        margin: pw.EdgeInsets.fromLTRB(0.5 * inch, 0.5 * inch, 0.5 * inch, 0.75 * inch),
+        margin: pw.EdgeInsets.fromLTRB(0.5 * inch, 0.5 * inch, 0.5 * inch, 1.5 * inch),
         footer: (context) => _buildPdfFooter(),
         build: (context) => [
           _buildPdfHeader(logoImage),
@@ -556,8 +573,11 @@ class _DocumentPreview extends StatelessWidget {
     final leftMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
     final rightMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
     final topMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
-    final bottomMarginPx = 0.75 * PdfPageFormat.inch * 1.333;
-    final sidebarWidthPx = 119.4;
+    final bottomMarginPx = 1.5 * PdfPageFormat.inch * 1.333;
+    // Sidebar scales proportionally with page width (119.4px is ~20% of A4 width 595px)
+    final sidebarWidthPx = widthPx * 0.20;
+    // Logo height scales with page size (58px for A4 width 595px)
+    final logoHeight = 58.0 * (widthPx / 793.3); // 793.3 = A4 width in px
 
     return Container(
       width: widthPx,
@@ -569,12 +589,12 @@ class _DocumentPreview extends StatelessWidget {
             top: 0,
             bottom: 0,
             width: sidebarWidthPx,
-            child: _buildSidebar(),
+            child: _buildSidebar(sidebarWidthPx),
           ),
           Positioned(
             right: 0,
             bottom: 0,
-            child: _buildBottomArt(),
+            child: _buildBottomArt(sidebarWidthPx),
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(
@@ -587,7 +607,7 @@ class _DocumentPreview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildHeader(),
+                _buildHeader(logoHeight),
                 const SizedBox(height: 6),
                 const Divider(color: Color(0xFF808080), thickness: 0.8),
                 const SizedBox(height: 14),
@@ -610,7 +630,7 @@ class _DocumentPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(double logoHeight) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -619,12 +639,12 @@ class _DocumentPreview extends StatelessWidget {
           children: [
             Image.asset(
               'assets/csu_logo.png',
-              height: 58,
+              height: logoHeight,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(
+                return Icon(
                   Icons.school,
-                  size: 58,
-                  color: Color(0xFF2E7D32),
+                  size: logoHeight,
+                  color: const Color(0xFF2E7D32),
                 );
               },
             ),
@@ -689,30 +709,32 @@ class _DocumentPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomArt() {
+  Widget _buildBottomArt(double scale) {
+    final w = 170 * (scale / 119.4);
+    final h = 90 * (scale / 119.4);
     return SizedBox(
-      width: 170,
-      height: 90,
+      width: w,
+      height: h,
       child: Stack(
         children: [
           Positioned(
-            right: 8,
-            bottom: 6,
+            right: 8 * (scale / 119.4),
+            bottom: 6 * (scale / 119.4),
             child: Image.asset(
               'assets/csu_building.png',
-              width: 118,
+              width: 118 * (scale / 119.4),
               errorBuilder: (context, error, stackTrace) =>
                   const SizedBox.shrink(),
             ),
           ),
           Positioned(
-            right: 4,
-            bottom: 40,
+            right: 4 * (scale / 119.4),
+            bottom: 40 * (scale / 119.4),
             child: Transform.rotate(
               angle: -0.35,
               child: Image.asset(
                 'assets/csu_eagle.png',
-                width: 34,
+                width: 34 * (scale / 119.4),
                 errorBuilder: (context, error, stackTrace) =>
                     const SizedBox.shrink(),
               ),
@@ -723,25 +745,26 @@ class _DocumentPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebar() {
-    const body = TextStyle(
+  Widget _buildSidebar(double widthPx) {
+    final scale = widthPx / 119.4;
+    final body = TextStyle(
       fontFamily: 'Monotype Corsiva',
-      fontSize: 8.5,
+      fontSize: 8.5 * scale,
       color: Colors.black,
       height: 1.3,
       fontStyle: FontStyle.italic,
     );
-    const heading = TextStyle(
+    final heading = TextStyle(
       fontFamily: 'Monotype Corsiva',
-      fontSize: 10,
+      fontSize: 10 * scale,
       fontWeight: FontWeight.bold,
       color: Colors.black,
       height: 1.3,
       fontStyle: FontStyle.italic,
     );
-    const group = TextStyle(
+    final group = TextStyle(
       fontFamily: 'Monotype Corsiva',
-      fontSize: 9,
+      fontSize: 9 * scale,
       fontWeight: FontWeight.bold,
       color: Colors.black,
       height: 1.3,
@@ -753,14 +776,14 @@ class _DocumentPreview extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('- ', style: body),
+              Text('- ', style: body),
               Expanded(child: Text(text, style: body)),
             ],
           ),
         );
 
     return SizedBox(
-      width: 119.4,
+      width: widthPx,
       child: Stack(
         children: [
           Positioned.fill(
@@ -770,37 +793,37 @@ class _DocumentPreview extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 60, 26, 20),
+            padding: EdgeInsets.fromLTRB(12 * (widthPx / 119.4), 60 * (widthPx / 119.4), 26 * (widthPx / 119.4), 20 * (widthPx / 119.4)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('VISION', style: heading),
+                Text('VISION', style: heading),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'CSU is a University with global stature in the arts, culture, agriculture and fisheries, the sciences as well as technological and professional fields.',
                   style: body,
                 ),
                 const SizedBox(height: 8),
-                const Text('MISSION', style: heading),
+                Text('MISSION', style: heading),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'Cagayan State University shall produce globally competent graduates through excellent instruction, innovative and creative research, responsive public service and productive industry and community engagement.',
                   style: body,
                 ),
                 const SizedBox(height: 8),
-                const Text('CORE VALUES', style: heading),
+                Text('CORE VALUES', style: heading),
                 const SizedBox(height: 2),
-                const Text('Competence', style: group),
+                Text('Competence', style: group),
                 bullet('Critical Thinker'),
                 bullet('Creative Problem -Solver'),
                 bullet('Competitive Performer: Nationally, Regionally and Globally.'),
                 const SizedBox(height: 6),
-                const Text('Social Responsibility', style: group),
+                Text('Social Responsibility', style: group),
                 bullet('Sensitive to Ethical Demands'),
                 bullet('Steward of the Environment for Future Generations'),
                 bullet('Social Justice and Economic Equity Advocate.'),
                 const SizedBox(height: 6),
-                const Text('Unifying Presence', style: group),
+                Text('Unifying Presence', style: group),
                 bullet('Uniting Theory and Practice'),
                 bullet('Uniting Strata of Society'),
                 bullet('Unifying the Nation, the ASEAN Region and the world'),
