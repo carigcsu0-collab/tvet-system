@@ -322,24 +322,12 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       ),
                     ],
                     const SizedBox(height: AppTheme.spaceLg),
-                    if (widget.allowTable) ...[
-                      const SectionHeader(
-                        icon: Icons.table_chart,
-                        imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
-                        title: 'Table (optional)',
-                        subtitle: 'Add tabular data to the document',
-                      ),
-                      const SizedBox(height: AppTheme.spaceSm),
-                      TableEditor(
-                        onChanged: (table) => setState(() => _table = table),
-                      ),
-                      const SizedBox(height: AppTheme.spaceLg),
-                    ],
+                    // Render non-footer fields first (to, from, subject, body, etc.)
                     ...List.generate(widget.fields.length, (i) {
                       final f = widget.fields[i];
+                      if (f.name == 'footerBody') return const SizedBox.shrink();
                       final isTo = f.name == 'to' || f.name == 'recipient';
                       final isBody = f.name == 'body';
-                      final isFooter = f.name == 'footerBody';
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                         child: TextFormField(
@@ -360,9 +348,48 @@ class _DocumentScreenState extends State<DocumentScreen> {
                           textAlign: isBody
                               ? TextAlign.justify
                               : TextAlign.start,
-                          validator: f.name == 'from' ||
-                                  f.name == 'subject' ||
-                                  isFooter
+                          validator: f.name == 'from' || f.name == 'subject'
+                              ? null
+                              : (v) => v == null || v.trim().isEmpty
+                                  ? 'Required'
+                                  : null,
+                        ),
+                      );
+                    }),
+                    // Table appears above the footer body
+                    if (widget.allowTable) ...[
+                      const SizedBox(height: AppTheme.spaceLg),
+                      const SectionHeader(
+                        icon: Icons.table_chart,
+                        imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
+                        title: 'Table (optional)',
+                        subtitle: 'Add tabular data to the document',
+                      ),
+                      const SizedBox(height: AppTheme.spaceSm),
+                      Center(
+                        child: TableEditor(
+                          onChanged: (table) => setState(() => _table = table),
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceLg),
+                    ],
+                    // Footer body field appears after the table
+                    ...List.generate(widget.fields.length, (i) {
+                      final f = widget.fields[i];
+                      if (f.name != 'footerBody') return const SizedBox.shrink();
+                      final isFooter = f.name == 'footerBody';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+                        child: TextFormField(
+                          controller: _controllers[i],
+                          decoration: InputDecoration(
+                            labelText: f.label,
+                          ),
+                          minLines: 1,
+                          maxLines: f.maxLines,
+                          keyboardType: TextInputType.multiline,
+                          textAlign: TextAlign.start,
+                          validator: isFooter
                               ? null
                               : (v) => v == null || v.trim().isEmpty
                                   ? 'Required'
