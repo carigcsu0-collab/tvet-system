@@ -34,6 +34,10 @@ class _PdfFontSet {
       fontBold: bold ?? regular,
       fontItalic: italic ?? regular,
       fontBoldItalic: boldItalic ?? bold ?? regular,
+      // Fall back to standard base-14 fonts for any character not present in
+      // the embedded font (e.g. stray/invisible unicode characters pasted
+      // into a text field), instead of rendering a missing-glyph "tofu" box.
+      fontFallback: [pw.Font.helvetica(), pw.Font.helveticaBold()],
       fontSize: fontSize,
       color: color,
       fontWeight: fontWeight,
