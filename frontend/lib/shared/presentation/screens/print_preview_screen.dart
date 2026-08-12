@@ -826,10 +826,19 @@ class _DocumentPreview extends StatelessWidget {
     final contentLeftPx = sidebarWidthPx + leftMarginPx;
     // 1.5 inch in px for sidebar bottom spacing
     final sidebarBottomSpacing = 1.5 * PdfPageFormat.inch * 1.333;
+    // The page must have a FIXED height matching the real page format,
+    // exactly like the actual PDF export/print. Otherwise the Stack shrinks
+    // to fit the content (mainAxisSize.min column), making the "page" box
+    // shorter than a real page whenever content is short — which pushes the
+    // footer up (instead of sitting at the true bottom margin) and makes the
+    // sidebar shorter than the full page height.
+    final heightPx = pageFormat.height * 1.333;
 
     return Container(
       width: widthPx,
+      height: heightPx,
       color: Colors.white,
+      clipBehavior: Clip.hardEdge,
       child: Stack(
         children: [
           // Sidebar fills the entire left side, full height
