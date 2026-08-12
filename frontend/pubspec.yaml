@@ -50,3 +50,29 @@ flutter:
     - family: Checkmark
       fonts:
         - asset: assets/fonts/checkmark.ttf
+    - family: CenturyGothic
+      fonts:
+        - asset: assets/fonts/century_gothic.ttf
+        - asset: assets/fonts/century_gothic_bold.ttf
+          weight: 700
+        - asset: assets/fonts/century_gothic_italic.ttf
+          style: italic
+        - asset: assets/fonts/century_gothic_bolditalic.ttf
+          weight: 700
+          style: italic
+    - family: Brush Script MT
+      fonts:
+        - asset: assets/fonts/brush_script_mt.ttf
+    - family: Monotype Corsiva
+      fonts:
+        - asset: assets/fonts/monotype_corsiva.ttf
+    - family: Constantia
+      fonts:
+        - asset: assets/fonts/constantia.ttf
+        - asset: assets/fonts/constantia_bold.ttf
+          weight: 700
+        - asset: assets/fonts/constantia_italic.ttf
+          style: italic
+        - asset: assets/fonts/constantia_bolditalic.ttf
+          weight: 700
+          style: italic

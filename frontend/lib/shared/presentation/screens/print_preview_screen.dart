@@ -14,6 +14,88 @@ import '../../../core/api_client.dart';
 import '../../../core/app_theme.dart';
 import '../widgets/ui_components.dart';
 
+class _PdfFontSet {
+  final pw.Font regular;
+  final pw.Font? bold;
+  final pw.Font? italic;
+  final pw.Font? boldItalic;
+
+  _PdfFontSet({required this.regular, this.bold, this.italic, this.boldItalic});
+
+  pw.TextStyle style({
+    required double fontSize,
+    PdfColor color = PdfColors.black,
+    pw.FontWeight? fontWeight,
+    pw.FontStyle? fontStyle,
+    double? height,
+    pw.TextDecoration? decoration,
+    PdfColor? decorationColor,
+  }) {
+    return pw.TextStyle(
+      fontNormal: regular,
+      fontBold: bold ?? regular,
+      fontItalic: italic ?? regular,
+      fontBoldItalic: boldItalic ?? bold ?? regular,
+      fontSize: fontSize,
+      color: color,
+      fontWeight: fontWeight,
+      fontStyle: fontStyle,
+      height: height,
+      decoration: decoration,
+      decorationColor: decorationColor,
+    );
+  }
+}
+
+class _PdfFonts {
+  final _PdfFontSet centuryGothic;
+  final _PdfFontSet brushScriptMt;
+  final _PdfFontSet monotypeCorsiva;
+  final _PdfFontSet constantia;
+
+  _PdfFonts({
+    required this.centuryGothic,
+    required this.brushScriptMt,
+    required this.monotypeCorsiva,
+    required this.constantia,
+  });
+
+  static Future<_PdfFonts> load() async {
+    Future<pw.Font> loadFont(String path) async {
+      final data = await rootBundle.load(path);
+      return pw.Font.ttf(data);
+    }
+
+    final centuryGothicRegular = await loadFont('assets/fonts/century_gothic.ttf');
+    final centuryGothicBold = await loadFont('assets/fonts/century_gothic_bold.ttf');
+    final centuryGothicItalic = await loadFont('assets/fonts/century_gothic_italic.ttf');
+    final centuryGothicBoldItalic = await loadFont('assets/fonts/century_gothic_bolditalic.ttf');
+    final brushScriptMt = await loadFont('assets/fonts/brush_script_mt.ttf');
+    final monotypeCorsiva = await loadFont('assets/fonts/monotype_corsiva.ttf');
+    final constantiaRegular = await loadFont('assets/fonts/constantia.ttf');
+    final constantiaBold = await loadFont('assets/fonts/constantia_bold.ttf');
+    final constantiaItalic = await loadFont('assets/fonts/constantia_italic.ttf');
+    final constantiaBoldItalic = await loadFont('assets/fonts/constantia_bolditalic.ttf');
+
+    return _PdfFonts(
+      centuryGothic: _PdfFontSet(
+        regular: centuryGothicRegular,
+        bold: centuryGothicBold,
+        italic: centuryGothicItalic,
+        boldItalic: centuryGothicBoldItalic,
+      ),
+      brushScriptMt: _PdfFontSet(regular: brushScriptMt),
+      monotypeCorsiva: _PdfFontSet(regular: monotypeCorsiva),
+      constantia: _PdfFontSet(
+        regular: constantiaRegular,
+        bold: constantiaBold,
+        italic: constantiaItalic,
+        boldItalic: constantiaBoldItalic,
+      ),
+    );
+  }
+}
+
 class PrintPreviewScreen extends StatefulWidget {
   final String code;
 
@@ -91,6 +173,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     final pageFormat = format ?? PdfPageFormat.a4;
     final pdf = pw.Document();
 
+    final fonts = await _PdfFonts.load();
+
     pw.MemoryImage? logoImage;
     try {
       final logoBytes = await rootBundle.load('assets/csu_logo.png');
@@ -138,7 +222,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
             bottom: 0,
             child: pw.SizedBox(
               width: sidebarWidth,
-              child: _buildPdfSidebar(sidebarImage),
+              child: _buildPdfSidebar(sidebarImage, fonts),
             ),
           ),
           // Bottom art - bottom right corner
@@ -157,17 +241,17 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         pageTheme: pageTheme,
         header: (context) => pw.Column(
           children: [
-            _buildPdfHeader(logoImage),
+            _buildPdfHeader(logoImage, fonts),
             pw.Divider(thickness: 0.8, color: PdfColors.grey),
             pw.SizedBox(height: 14),
           ],
         ),
-        footer: (context) => _buildPdfFooter(),
+        footer: (context) => _buildPdfFooter(fonts),
         build: (context) => [
           if (slug == 'certificate-of-appearance')
-            ..._buildPdfCertificateContent(payload, code)
+            ..._buildPdfCertificateContent(payload, code, fonts)
           else
-            ..._buildPdfLetterContent(payload, code),
+            ..._buildPdfLetterContent(payload, code, fonts),
         ],
       ),
     );
@@ -175,10 +259,10 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     return pdf.save();
   }
 
-  pw.Widget _buildPdfSidebar(pw.MemoryImage? sidebarImage) {
-    const bodyStyle = pw.TextStyle(fontSize: 7, color: PdfColors.black, height: 1.3);
-    const headingStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColors.black, height: 1.3);
-    const groupStyle = pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: PdfColors.black, height: 1.3);
+  pw.Widget _buildPdfSidebar(pw.MemoryImage? sidebarImage, _PdfFonts fonts) {
+    final bodyStyle = fonts.monotypeCorsiva.style(fontSize: 7, height: 1.3, fontStyle: pw.FontStyle.italic);
+    final headingStyle = fonts.monotypeCorsiva.style(fontSize: 8, fontWeight: pw.FontWeight.bold, height: 1.3, fontStyle: pw.FontStyle.italic);
+    final groupStyle = fonts.monotypeCorsiva.style(fontSize: 7.5, fontWeight: pw.FontWeight.bold, height: 1.3, fontStyle: pw.FontStyle.italic);
 
     return pw.Stack(
       children: [
@@ -255,7 +339,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  pw.Widget _buildPdfHeader(pw.MemoryImage? logoImage) {
+  pw.Widget _buildPdfHeader(pw.MemoryImage? logoImage, _PdfFonts fonts) {
     return pw.Column(
       children: [
         pw.Center(
@@ -268,17 +352,17 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
                   pw.Text('Republic of the Philippines',
-                      style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                      style: fonts.centuryGothic.style(fontSize: 9, color: PdfColors.grey600)),
                   pw.Text('CAGAYAN STATE UNIVERSITY',
-                      style: pw.TextStyle(
+                      style: fonts.centuryGothic.style(
                           fontSize: 15,
                           fontWeight: pw.FontWeight.bold,
                           color: PdfColors.grey800)),
                   pw.Text('CARIG CAMPUS',
-                      style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+                      style: fonts.centuryGothic.style(fontSize: 11, color: PdfColors.grey600)),
                   pw.SizedBox(height: 2),
                   pw.Text('Carig Sur, Tuguegarao City, Cagayan',
-                      style: pw.TextStyle(fontSize: 8.5, color: PdfColors.grey600)),
+                      style: fonts.centuryGothic.style(fontSize: 8.5, color: PdfColors.grey600)),
                 ],
               ),
             ],
@@ -287,7 +371,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         pw.SizedBox(height: 10),
         pw.Center(
           child: pw.Text('Campus TVET Office',
-              style: pw.TextStyle(
+              style: fonts.brushScriptMt.style(
                   fontSize: 17,
                   fontStyle: pw.FontStyle.italic,
                   fontWeight: pw.FontWeight.bold,
@@ -297,24 +381,44 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  pw.Widget _buildPdfFooter() {
+  pw.Widget _buildPdfFooter(_PdfFonts fonts) {
+    final base = fonts.constantia.style(fontSize: 9, color: PdfColors.black);
+    final link = fonts.constantia.style(
+      fontSize: 9,
+      color: const PdfColor.fromInt(0xFF0462C1),
+      decoration: pw.TextDecoration.underline,
+      decorationColor: const PdfColor.fromInt(0xFF0462C1),
+    );
     return pw.Padding(
       padding: const pw.EdgeInsets.only(top: 4),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Website: http://www.csucarig.edu.ph',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.blue)),
-          pw.Text('Email Address: tvet@csucarig.edu.ph',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.blue)),
-          pw.Text('Local No. 042',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.black)),
+          pw.RichText(
+            text: pw.TextSpan(
+              style: base,
+              children: [
+                const pw.TextSpan(text: 'Website: '),
+                pw.TextSpan(text: 'http://www.csucarig.edu.ph', style: link),
+              ],
+            ),
+          ),
+          pw.RichText(
+            text: pw.TextSpan(
+              style: base,
+              children: [
+                const pw.TextSpan(text: 'Email Address: '),
+                pw.TextSpan(text: 'tvet@csucarig.edu.ph', style: link),
+              ],
+            ),
+          ),
+          pw.Text('Local No. 042', style: base),
         ],
       ),
     );
   }
 
-  List<pw.Widget> _buildPdfLetterContent(Map<String, dynamic> payload, String code) {
+  List<pw.Widget> _buildPdfLetterContent(Map<String, dynamic> payload, String code, _PdfFonts fonts) {
     final date = payload['date']?.toString() ??
         payload['issued_at']?.toString() ??
         '';
@@ -341,13 +445,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     final greetings = payload['greetings']?.toString() ?? 'Sir:';
     final footerBody = payload['footerBody']?.toString() ?? '';
 
-    const bodyStyle = pw.TextStyle(fontSize: 12, color: PdfColors.black, height: 1.6);
-    const boldStyle = pw.TextStyle(
+    final bodyStyle = fonts.centuryGothic.style(fontSize: 12, color: PdfColors.black, height: 1.6);
+    final boldStyle = fonts.centuryGothic.style(
         fontSize: 12, color: PdfColors.black, height: 1.6, fontWeight: pw.FontWeight.bold);
 
     return [
       pw.Text(code,
-          style: pw.TextStyle(
+          style: fonts.centuryGothic.style(
               fontSize: 12, color: PdfColors.green, fontWeight: pw.FontWeight.bold)),
       pw.SizedBox(height: 16),
       if (date.isNotEmpty) pw.Text(date, style: bodyStyle),
@@ -371,7 +475,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       pw.Text(greetings, style: bodyStyle),
       pw.SizedBox(height: 4),
       pw.Text('Greetings!',
-          style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic, color: PdfColors.black)),
+          style: fonts.centuryGothic.style(fontSize: 12, fontStyle: pw.FontStyle.italic, color: PdfColors.black)),
       pw.SizedBox(height: 12),
       pw.Text(body, style: bodyStyle, textAlign: pw.TextAlign.justify),
       if (table != null && table.isNotEmpty) ...[
@@ -387,13 +491,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       pw.SizedBox(height: 2 * PdfPageFormat.mm),
       pw.Text(coordinator, style: boldStyle),
       pw.Text(coordinatorTitle,
-          style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+          style: fonts.centuryGothic.style(fontSize: 11, color: PdfColors.black)),
       pw.Text('Cagayan State University',
-          style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+          style: fonts.centuryGothic.style(fontSize: 11, color: PdfColors.black)),
     ];
   }
 
-  List<pw.Widget> _buildPdfCertificateContent(Map<String, dynamic> payload, String code) {
+  List<pw.Widget> _buildPdfCertificateContent(Map<String, dynamic> payload, String code, _PdfFonts fonts) {
     final recipient = payload['recipient_name']?.toString() ?? '';
     final office = payload['recipient_office']?.toString() ?? '';
     final campus = payload['campus_name']?.toString() ?? '';
@@ -406,16 +510,16 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         '';
     final coordinatorTitle = payload['coordinatorTitle']?.toString() ?? 'TVET Coordinator';
 
-    const bodyStyle = pw.TextStyle(fontSize: 12, color: PdfColors.black, height: 1.6);
+    final bodyStyle = fonts.centuryGothic.style(fontSize: 12, color: PdfColors.black, height: 1.6);
 
     return [
       pw.Text(code,
-          style: pw.TextStyle(
+          style: fonts.centuryGothic.style(
               fontSize: 12, color: PdfColors.green, fontWeight: pw.FontWeight.bold)),
       pw.SizedBox(height: 16),
       pw.Center(
         child: pw.Text('CERTIFICATE OF APPEARANCE',
-            style: pw.TextStyle(
+            style: fonts.centuryGothic.style(
                 fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
       ),
       pw.SizedBox(height: 24),
@@ -426,7 +530,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ),
       pw.SizedBox(height: 20),
       pw.Text('Purpose of appearance:',
-          style: pw.TextStyle(
+          style: fonts.centuryGothic.style(
               fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
       pw.SizedBox(height: 6),
       pw.Text(purpose, style: bodyStyle, textAlign: pw.TextAlign.justify),
@@ -448,12 +552,12 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             pw.Text(coordinator,
-                style: pw.TextStyle(
+                style: fonts.centuryGothic.style(
                     fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
             pw.Text(coordinatorTitle,
-                style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+                style: fonts.centuryGothic.style(fontSize: 11, color: PdfColors.black)),
             pw.Text('Cagayan State University',
-                style: pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+                style: fonts.centuryGothic.style(fontSize: 11, color: PdfColors.black)),
           ],
         ),
       ),
