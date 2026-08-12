@@ -121,15 +121,49 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       eagleImage = pw.MemoryImage(eBytes.buffer.asUint8List());
     } catch (_) {}
 
+    // Sidebar width = 20% of page width (matching on-screen preview)
+    final sidebarWidth = pageFormat.width * 0.20;
+    final contentLeftMargin = sidebarWidth + 0.5 * inch;
+
+    // Build the page theme with sidebar and bottom art as background
+    final pageTheme = pw.PageTheme(
+      pageFormat: pageFormat,
+      margin: pw.EdgeInsets.fromLTRB(contentLeftMargin, 0.5 * inch, 0.5 * inch, 1.5 * inch),
+      buildBackground: (context) => pw.Stack(
+        children: [
+          // Sidebar - full height left side
+          pw.Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: pw.SizedBox(
+              width: sidebarWidth,
+              child: _buildPdfSidebar(sidebarImage),
+            ),
+          ),
+          // Bottom art - bottom right corner
+          if (buildingImage != null)
+            pw.Positioned(
+              right: 0,
+              bottom: 0,
+              child: _buildPdfBottomArt(buildingImage, eagleImage, sidebarWidth),
+            ),
+        ],
+      ),
+    );
+
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: pageFormat,
-        margin: pw.EdgeInsets.fromLTRB(0.5 * inch, 0.5 * inch, 0.5 * inch, 1.5 * inch),
+        pageTheme: pageTheme,
+        header: (context) => pw.Column(
+          children: [
+            _buildPdfHeader(logoImage),
+            pw.Divider(thickness: 0.8, color: PdfColors.grey),
+            pw.SizedBox(height: 14),
+          ],
+        ),
         footer: (context) => _buildPdfFooter(),
         build: (context) => [
-          _buildPdfHeader(logoImage),
-          pw.Divider(thickness: 0.8, color: PdfColors.grey),
-          pw.SizedBox(height: 14),
           if (slug == 'certificate-of-appearance')
             ..._buildPdfCertificateContent(payload, code)
           else
@@ -141,32 +175,125 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     return pdf.save();
   }
 
-  pw.Widget _buildPdfHeader(pw.MemoryImage? logoImage) {
-    return pw.Center(
-      child: pw.Row(
-        mainAxisSize: pw.MainAxisSize.min,
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          if (logoImage != null) pw.Image(logoImage, height: 58),
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
+  pw.Widget _buildPdfSidebar(pw.MemoryImage? sidebarImage) {
+    const bodyStyle = pw.TextStyle(fontSize: 7, color: PdfColors.black, height: 1.3);
+    const headingStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColors.black, height: 1.3);
+    const groupStyle = pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: PdfColors.black, height: 1.3);
+
+    return pw.Stack(
+      children: [
+        if (sidebarImage != null)
+          pw.Positioned.fill(
+            child: pw.Image(sidebarImage, fit: pw.BoxFit.fill),
+          ),
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(10, 50, 22, 50),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Republic of the Philippines',
-                  style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
-              pw.Text('CAGAYAN STATE UNIVERSITY',
-                  style: pw.TextStyle(
-                      fontSize: 15,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.grey800)),
-              pw.Text('CARIG CAMPUS',
-                  style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+              pw.Text('VISION', style: headingStyle),
               pw.SizedBox(height: 2),
-              pw.Text('Carig Sur, Tuguegarao City, Cagayan',
-                  style: pw.TextStyle(fontSize: 8.5, color: PdfColors.grey600)),
+              pw.Text(
+                'CSU is a University with global stature in the arts, culture, agriculture and fisheries, the sciences as well as technological and professional fields.',
+                style: bodyStyle,
+              ),
+              pw.SizedBox(height: 6),
+              pw.Text('MISSION', style: headingStyle),
+              pw.SizedBox(height: 2),
+              pw.Text(
+                'Cagayan State University shall produce globally competent graduates through excellent instruction, innovative and creative research, responsive public service and productive industry and community engagement.',
+                style: bodyStyle,
+              ),
+              pw.SizedBox(height: 6),
+              pw.Text('CORE VALUES', style: headingStyle),
+              pw.SizedBox(height: 2),
+              pw.Text('Competence', style: groupStyle),
+              pw.Text('- Critical Thinker', style: bodyStyle),
+              pw.Text('- Creative Problem -Solver', style: bodyStyle),
+              pw.Text('- Competitive Performer: Nationally, Regionally and Globally.', style: bodyStyle),
+              pw.SizedBox(height: 4),
+              pw.Text('Social Responsibility', style: groupStyle),
+              pw.Text('- Sensitive to Ethical Demands', style: bodyStyle),
+              pw.Text('- Steward of the Environment for Future Generations', style: bodyStyle),
+              pw.Text('- Social Justice and Economic Equity Advocate.', style: bodyStyle),
+              pw.SizedBox(height: 4),
+              pw.Text('Unifying Presence', style: groupStyle),
+              pw.Text('- Uniting Theory and Practice', style: bodyStyle),
+              pw.Text('- Uniting Strata of Society', style: bodyStyle),
+              pw.Text('- Unifying the Nation, the ASEAN Region and the world', style: bodyStyle),
+              pw.Text('- Uniting the University and the community.', style: bodyStyle),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildPdfBottomArt(pw.MemoryImage buildingImage, pw.MemoryImage? eagleImage, double sidebarWidth) {
+    final scale = sidebarWidth / 89.25; // 89.25pt = 119.4px in points
+    return pw.SizedBox(
+      width: 127.5 * scale,
+      height: 67.5 * scale,
+      child: pw.Stack(
+        children: [
+          pw.Positioned(
+            right: 6 * scale,
+            bottom: 4.5 * scale,
+            child: pw.Image(buildingImage, width: 88.5 * scale),
+          ),
+          if (eagleImage != null)
+            pw.Positioned(
+              right: 3 * scale,
+              bottom: 30 * scale,
+              child: pw.Transform.rotate(
+                angle: -0.35,
+                child: pw.Image(eagleImage, width: 25.5 * scale),
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  pw.Widget _buildPdfHeader(pw.MemoryImage? logoImage) {
+    return pw.Column(
+      children: [
+        pw.Center(
+          child: pw.Row(
+            mainAxisSize: pw.MainAxisSize.min,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              if (logoImage != null) pw.Image(logoImage, height: 58),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  pw.Text('Republic of the Philippines',
+                      style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                  pw.Text('CAGAYAN STATE UNIVERSITY',
+                      style: pw.TextStyle(
+                          fontSize: 15,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.grey800)),
+                  pw.Text('CARIG CAMPUS',
+                      style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+                  pw.SizedBox(height: 2),
+                  pw.Text('Carig Sur, Tuguegarao City, Cagayan',
+                      style: pw.TextStyle(fontSize: 8.5, color: PdfColors.grey600)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 10),
+        pw.Center(
+          child: pw.Text('Campus TVET Office',
+              style: pw.TextStyle(
+                  fontSize: 17,
+                  fontStyle: pw.FontStyle.italic,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey500)),
+        ),
+      ],
     );
   }
 
