@@ -207,29 +207,38 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     // Sidebar width = 20% of page width (matching on-screen preview)
     final sidebarWidth = pageFormat.width * 0.20;
+    const topMargin = 0.5 * inch;
+    const rightMargin = 0.5 * inch;
+    const bottomMargin = 1.5 * inch;
     final contentLeftMargin = sidebarWidth + 0.5 * inch;
 
-    // Build the page theme with sidebar and bottom art as background
+    // NOTE: pw.PageTheme.buildBackground paints its content relative to the
+    // margin box (offset by margin.left / margin.bottom), not the true page
+    // origin (0,0). To make the sidebar bleed to the true left edge of the
+    // page (instead of rendering at x = contentLeftMargin, which overlaps the
+    // body content), we offset it left/top/bottom by the negative margin
+    // amounts so it lands at the actual page edges.
     final pageTheme = pw.PageTheme(
       pageFormat: pageFormat,
-      margin: pw.EdgeInsets.fromLTRB(contentLeftMargin, 0.5 * inch, 0.5 * inch, 1.5 * inch),
+      margin: pw.EdgeInsets.fromLTRB(contentLeftMargin, topMargin, rightMargin, bottomMargin),
       buildBackground: (context) => pw.Stack(
+        overflow: pw.Overflow.visible,
         children: [
-          // Sidebar - full height left side
+          // Sidebar - full height, true left edge of the page
           pw.Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
+            left: -contentLeftMargin,
+            top: -topMargin,
+            bottom: -bottomMargin,
             child: pw.SizedBox(
               width: sidebarWidth,
               child: _buildPdfSidebar(sidebarImage, fonts),
             ),
           ),
-          // Bottom art - bottom right corner
+          // Bottom art - true bottom-right corner of the page
           if (buildingImage != null)
             pw.Positioned(
-              right: 0,
-              bottom: 0,
+              right: -rightMargin,
+              bottom: -bottomMargin,
               child: _buildPdfBottomArt(buildingImage, eagleImage, sidebarWidth),
             ),
         ],
