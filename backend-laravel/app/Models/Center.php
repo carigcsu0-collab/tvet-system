@@ -29,8 +29,8 @@ class Center extends Model
         'assessment_fee' => 'float',
         'training_fee' => 'float',
         'qualifications' => 'array',
-        'expiration_date' => 'date',
-        'audit_date' => 'date',
+        'expiration_date' => 'string',
+        'audit_date' => 'string',
         'audit_completed_at' => 'datetime',
     ];
 
