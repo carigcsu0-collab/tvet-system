@@ -51,6 +51,7 @@ Route::middleware('api.auth')->group(function () {
 
     Route::get('/assessees', [AssesseeController::class, 'index']);
     Route::post('/assessees', [AssesseeController::class, 'store']);
+    Route::post('/assessees/bulk-update', [AssesseeController::class, 'bulkUpdate']);
     Route::put('/assessees/{assessee}', [AssesseeController::class, 'update']);
     Route::delete('/assessees/{assessee}', [AssesseeController::class, 'destroy']);
 

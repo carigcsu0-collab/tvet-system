@@ -93,6 +93,37 @@ class AssesseeController extends Controller
         return response()->json($assessee->load('center:id,name'), 201);
     }
 
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:assessees,id'],
+            'assessor' => ['nullable', 'string', 'max:255'],
+            'assessment_date' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $update = [];
+        if (array_key_exists('assessor', $validated)) {
+            $update['assessor'] = $validated['assessor'];
+        }
+        if (array_key_exists('assessment_date', $validated)) {
+            $update['assessment_date'] = $validated['assessment_date'];
+        }
+
+        if ($update === []) {
+            return response()->json(['updated' => 0]);
+        }
+
+        $count = Assessee::whereIn('id', $validated['ids'])->update($update);
+
+        ActivityLog::record(
+            'assessee.bulk_updated',
+            "Bulk updated {$count} assessees"
+        );
+
+        return response()->json(['updated' => $count]);
+    }
+
     public function update(Request $request, Assessee $assessee)
     {
         $validated = $request->validate([
