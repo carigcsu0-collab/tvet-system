@@ -45,7 +45,8 @@ class AssesseeController extends Controller
             'assessment_center_id' => ['required', 'integer', 'exists:centers,id'],
             'last_name' => ['required', 'string', 'max:255'],
             'first_name' => ['required', 'string', 'max:255'],
-            'middle_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'extension_name' => ['nullable', 'string', 'max:255'],
             'birthday' => ['required', 'string', 'max:255'],
             'age' => ['required', 'integer', 'min:0'],
             'uli' => ['nullable', 'string', 'max:255'],
@@ -70,7 +71,8 @@ class AssesseeController extends Controller
 
         $validated['name'] = trim(
             $validated['last_name'] . ', ' . $validated['first_name'] .
-            (empty($validated['middle_name']) ? '' : ' ' . $validated['middle_name'])
+            (empty($validated['middle_name']) ? '' : ' ' . $validated['middle_name']) .
+            (empty($validated['extension_name'] ?? '') ? '' : ' ' . $validated['extension_name'])
         );
 
         $validated['competency'] = $validated['competency'] ?? 'Pending';
@@ -130,7 +132,8 @@ class AssesseeController extends Controller
             'assessment_center_id' => ['required', 'integer', 'exists:centers,id'],
             'last_name' => ['required', 'string', 'max:255'],
             'first_name' => ['required', 'string', 'max:255'],
-            'middle_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'extension_name' => ['nullable', 'string', 'max:255'],
             'birthday' => ['required', 'string', 'max:255'],
             'age' => ['required', 'integer', 'min:0'],
             'uli' => ['nullable', 'string', 'max:255'],
@@ -155,7 +158,8 @@ class AssesseeController extends Controller
 
         $validated['name'] = trim(
             $validated['last_name'] . ', ' . $validated['first_name'] .
-            (empty($validated['middle_name']) ? '' : ' ' . $validated['middle_name'])
+            (empty($validated['middle_name']) ? '' : ' ' . $validated['middle_name']) .
+            (empty($validated['extension_name'] ?? '') ? '' : ' ' . $validated['extension_name'])
         );
 
         $validated['competency'] = $validated['competency'] ?? 'Pending';
