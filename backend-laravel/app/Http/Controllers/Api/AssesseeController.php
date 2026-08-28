@@ -99,7 +99,7 @@ class AssesseeController extends Controller
     {
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['integer', 'exists:assessees,id'],
+            'ids.*' => ['integer', 'exists:assessee_trainees,id'],
             'assessor' => ['nullable', 'string', 'max:255'],
             'assessment_date' => ['nullable', 'string', 'max:255'],
         ]);

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AssesseeController;
 use App\Http\Controllers\Api\AssessorController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CenterController;
+use App\Http\Controllers\Api\CommunicationPdfController;
 use App\Http\Controllers\Api\DocumentCodeSettingController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DocumentTypeController;
@@ -30,6 +31,7 @@ Route::middleware('api.auth')->group(function () {
     Route::get('/document-code-settings', [DocumentCodeSettingController::class, 'index']);
     Route::put('/document-code-settings/{slug}', [DocumentCodeSettingController::class, 'update']);
 
+    Route::post('/documents/render-communication-pdf', [CommunicationPdfController::class, 'render']);
     Route::post('/documents/{typeSlug}/generate', [DocumentController::class, 'generate']);
     Route::post('/documents/{typeSlug}', [DocumentController::class, 'store']);
     Route::get('/documents', [DocumentController::class, 'index']);
