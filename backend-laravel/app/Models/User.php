@@ -45,4 +45,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(DocumentRecord::class);
     }
+
+    public function apiTokens(): HasMany
+    {
+        return $this->hasMany(ApiToken::class);
+    }
 }

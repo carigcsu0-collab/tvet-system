@@ -81,6 +81,13 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // Revoke this device's token on the server so it can no longer be used,
+    // but only clear local state regardless of whether the call succeeds.
+    try {
+      await ApiClient.post('/auth/logout');
+    } catch (_) {
+      // Network/server failure — still log out locally.
+    }
     _token = null;
     _isAuthenticated = false;
     _rememberedEmail = null;
