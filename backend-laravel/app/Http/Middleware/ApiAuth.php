@@ -28,9 +28,20 @@ class ApiAuth
         $user = null;
         $apiToken = ApiToken::where('token', $token)->first();
         if ($apiToken !== null) {
+            // Reject expired tokens. expires_at is null for legacy rows,
+            // which are treated as never-expiring (backward compat).
+            if ($apiToken->expires_at !== null && $apiToken->expires_at->isPast()) {
+                return response()->json(['error' => 'Token expired'], 401);
+            }
+
             $user = $apiToken->user;
-            // Touch last_used_at without firing a full model update storm.
-            $apiToken->forceFill(['last_used_at' => now()])->save();
+
+            // Sliding window: refresh last_used_at and push expires_at forward
+            // by 15 days on every request so active sessions don't time out.
+            $apiToken->forceFill([
+                'last_used_at' => now(),
+                'expires_at' => now()->addDays(15),
+            ])->save();
         }
 
         // Backward compatibility: tokens issued before the api_tokens table

@@ -2,12 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:excel/excel.dart' hide Border;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_theme.dart';
 import '../widgets/ui_components.dart';
@@ -523,24 +526,50 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
   bool _exporting = false;
 
-  /// Shows a save dialog and writes [bytes] to the chosen path.
+  /// Saves [bytes] to a file. On desktop (Windows/macOS/Linux) a native save
+  /// dialog is shown. On mobile (Android/iOS) the file is written to the
+  /// app's temporary directory and then shared via the system share sheet
+  /// so the user can save it to Downloads, send it, etc.
   Future<void> _saveFile(
     List<int> bytes, {
     required String dialogTitle,
     required String fileName,
     required String extension,
   }) async {
-    final outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: dialogTitle,
-      fileName: fileName,
-      type: FileType.custom,
-      allowedExtensions: [extension],
+    // Desktop: use the native save dialog.
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      final outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: dialogTitle,
+        fileName: fileName,
+        type: FileType.custom,
+        allowedExtensions: [extension],
+      );
+      if (outputPath == null) return;
+      await File(outputPath).writeAsBytes(bytes);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved to: $outputPath')),
+        );
+      }
+      return;
+    }
+
+    // Mobile / web: write to a temp directory and share.
+    final dir = await getTemporaryDirectory();
+    final filePath = '${dir.path}/$fileName';
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+
+    // Use the share sheet so the user can save to Downloads, send via
+    // email, etc. This is the standard way to "export" on Android.
+    await Share.shareXFiles(
+      [XFile(filePath)],
+      subject: fileName,
     );
-    if (outputPath == null) return;
-    await File(outputPath).writeAsBytes(bytes);
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved to: $outputPath')),
+        SnackBar(content: Text('Exported: $fileName')),
       );
     }
   }

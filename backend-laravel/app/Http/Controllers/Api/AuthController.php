@@ -34,6 +34,7 @@ class AuthController extends Controller
         $user->apiTokens()->create([
             'token' => $plainToken,
             'device_name' => $validated['device_name'] ?? $request->userAgent(),
+            'expires_at' => now()->addDays(15),
         ]);
 
         ActivityLog::record(

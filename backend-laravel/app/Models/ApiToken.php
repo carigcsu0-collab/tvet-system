@@ -12,6 +12,7 @@ class ApiToken extends Model
         'token',
         'device_name',
         'last_used_at',
+        'expires_at',
     ];
 
     protected $hidden = [
@@ -22,6 +23,7 @@ class ApiToken extends Model
     {
         return [
             'last_used_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 

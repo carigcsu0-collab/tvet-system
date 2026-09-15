@@ -3,6 +3,14 @@ import 'constants.dart';
 
 class ApiClient {
   static String? _token;
+  /// Called when any authenticated request receives a 401. Set by the app
+  /// shell (via setOnUnauthorized) to trigger forceLogout on the AuthProvider.
+  static void Function()? _onUnauthorized;
+
+  static void setOnUnauthorized(void Function()? callback) {
+    _onUnauthorized = callback;
+  }
+
   static final Dio _dio = Dio(
     BaseOptions(
       baseUrl: AppConstants.apiBaseUrl,
@@ -23,6 +31,13 @@ class ApiClient {
           handler.next(options);
         },
         onError: (e, handler) async {
+          // Trigger forceLogout on a genuine 401 from any authenticated
+          // request (token expired or revoked). Skip /auth/login so the
+          // login screen itself doesn't trigger a logout loop.
+          if (e.response?.statusCode == 401 &&
+              !e.requestOptions.path.contains('/auth/login')) {
+            _onUnauthorized?.call();
+          }
           // Retry on connection timeout or send timeout (up to 2 retries)
           if (_shouldRetry(e) && (e.requestOptions.extra['retryCount'] ?? 0) < 2) {
             e.requestOptions.extra['retryCount'] =
@@ -63,6 +78,16 @@ class ApiClient {
 
   static Future<Response> post(String path, {dynamic data}) async {
     return _dio.post(path, data: data);
+  }
+
+  /// POSTs [data] and returns the raw response bytes (e.g. a generated PDF).
+  static Future<List<int>> postBytes(String path, {dynamic data}) async {
+    final response = await _dio.post(
+      path,
+      data: data,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data as List<int>;
   }
 
   static Future<Response> put(String path, {dynamic data}) async {

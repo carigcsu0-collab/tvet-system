@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
@@ -29,28 +28,15 @@ class AuthProvider extends ChangeNotifier {
     final stored = prefs.getString('token');
     if (stored != null && stored.isNotEmpty) {
       ApiClient.setToken(stored);
-      // Trust the token immediately so user stays logged in
-      // even if the server is cold-starting on Render
+      // Trust the stored token immediately. We do NOT call /auth/me on
+      // startup because a transient 401 (e.g. Render cold start) would
+      // log the user out. The token has a 15-day sliding expiration on
+      // the server, so it stays valid as long as the user is active.
+      // If the token is truly expired, the first real API call will
+      // return 401 and forceLogout() handles it.
       _token = stored;
       _isAuthenticated = true;
       notifyListeners();
-      // Validate in background — only clear on 401, not network errors
-      try {
-        await ApiClient.get('/auth/me');
-      } on DioException catch (e) {
-        if (e.response?.statusCode == 401) {
-          _token = null;
-          _isAuthenticated = false;
-          _rememberedEmail = null;
-          ApiClient.setToken(null);
-          await prefs.remove('token');
-          await prefs.remove('remembered_email');
-          await prefs.remove('remember_me');
-          notifyListeners();
-        }
-      } catch (_) {
-        // Network error, server cold start, etc. — keep session alive
-      }
     }
   }
 
@@ -78,6 +64,22 @@ class AuthProvider extends ChangeNotifier {
 
     notifyListeners();
     return true;
+  }
+
+  /// Called when any API request receives a 401, meaning the token is
+  /// genuinely invalid or expired. This is the ONLY path that should auto-
+  /// logout — not the startup validation.
+  void forceLogout() {
+    _token = null;
+    _isAuthenticated = false;
+    _rememberedEmail = null;
+    ApiClient.setToken(null);
+    SharedPreferences.getInstance().then((prefs) async {
+      await prefs.remove('token');
+      await prefs.remove('remember_me');
+      await prefs.remove('remembered_email');
+    });
+    notifyListeners();
   }
 
   Future<void> logout() async {
