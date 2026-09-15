@@ -119,21 +119,6 @@ class AppNavDrawer extends StatelessWidget {
           label: Text('Certificate of Appearance'),
         ),
         const NavigationDrawerDestination(
-          icon: Icon(Icons.message_outlined),
-          selectedIcon: Icon(Icons.message),
-          label: Text('Internal Communication'),
-        ),
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.mail_outline),
-          selectedIcon: Icon(Icons.mail),
-          label: Text('External Communication'),
-        ),
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.verified_outlined),
-          selectedIcon: Icon(Icons.verified),
-          label: Text('Endorsement'),
-        ),
-        const NavigationDrawerDestination(
           icon: Icon(Icons.fact_check_outlined),
           selectedIcon: Icon(Icons.fact_check),
           label: Text('Report on Assessment Proceedings'),
@@ -157,6 +142,11 @@ class AppNavDrawer extends StatelessWidget {
           icon: Icon(Icons.receipt_long_outlined),
           selectedIcon: Icon(Icons.receipt_long),
           label: Text('Payment Slip'),
+        ),
+        const NavigationDrawerDestination(
+          icon: Icon(Icons.track_changes_outlined),
+          selectedIcon: Icon(Icons.track_changes),
+          label: Text('Document Monitoring'),
         ),
 
         const SizedBox(height: 8),

@@ -5,11 +5,14 @@ use App\Http\Controllers\Api\AssessorController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CenterController;
 use App\Http\Controllers\Api\CommunicationPdfController;
+use App\Http\Controllers\Api\CommunicationRecordController;
 use App\Http\Controllers\Api\DocumentCodeSettingController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DocumentTypeController;
 use App\Http\Controllers\Api\OfficeController;
 use App\Http\Controllers\Api\PaymentSlipController;
+use App\Http\Controllers\Api\PurchaseRequestController;
+use App\Http\Controllers\Api\ReimbursementController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PeiDocumentController;
 use App\Http\Controllers\Api\RapDocumentController;
@@ -82,6 +85,22 @@ Route::middleware('api.auth')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+
+    // Document monitoring
+    Route::get('/communications', [CommunicationRecordController::class, 'index']);
+    Route::post('/communications', [CommunicationRecordController::class, 'store']);
+    Route::put('/communications/{communicationRecord}', [CommunicationRecordController::class, 'update']);
+    Route::delete('/communications/{communicationRecord}', [CommunicationRecordController::class, 'destroy']);
+
+    Route::get('/purchase-requests', [PurchaseRequestController::class, 'index']);
+    Route::post('/purchase-requests', [PurchaseRequestController::class, 'store']);
+    Route::put('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'update']);
+    Route::delete('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'destroy']);
+
+    Route::get('/reimbursements', [ReimbursementController::class, 'index']);
+    Route::post('/reimbursements', [ReimbursementController::class, 'store']);
+    Route::put('/reimbursements/{reimbursement}', [ReimbursementController::class, 'update']);
+    Route::delete('/reimbursements/{reimbursement}', [ReimbursementController::class, 'destroy']);
 
     Route::get('/payment-slips', [PaymentSlipController::class, 'index']);
     Route::post('/payment-slips', [PaymentSlipController::class, 'store']);

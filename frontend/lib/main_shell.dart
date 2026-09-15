@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/constants.dart';
 import 'core/records_refresh.dart';
 import 'shared/presentation/screens/activity_logs_screen.dart';
 import 'shared/presentation/screens/assessors_screen.dart';
@@ -10,9 +9,8 @@ import 'shared/presentation/screens/centers_screen.dart';
 import 'shared/presentation/screens/certificate_of_appearance_screen.dart';
 import 'shared/presentation/screens/dashboard_screen.dart';
 import 'shared/presentation/screens/document_code_settings_screen.dart';
+import 'shared/presentation/screens/document_monitoring_screen.dart';
 import 'shared/presentation/screens/document_records_screen.dart';
-import 'shared/presentation/screens/document_screen.dart';
-import 'shared/presentation/screens/endorsement_screen.dart';
 import 'shared/presentation/screens/payment_slip_screen.dart';
 import 'shared/presentation/screens/pei_screen.dart';
 import 'shared/presentation/screens/rap_screen.dart';
@@ -25,6 +23,7 @@ import 'main.dart';
 final _documentRecordsKey = GlobalKey<DocumentRecordsScreenState>();
 final _assessmentKey = GlobalKey<AssesseesListScreenState>();
 final _trainingKey = GlobalKey<AssesseesListScreenState>();
+final _paymentSlipKey = GlobalKey<PaymentSlipScreenState>();
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -38,36 +37,17 @@ class _MainShellState extends State<MainShell> {
   final _recordsRefresh = RecordsRefresh();
   final _visitedTabs = <int>{0};
 
-  final List<FieldConfig> _internalFields = const [
-    FieldConfig(name: 'to', label: 'To (Name, Designation, Office, Address)'),
-    FieldConfig(name: 'from', label: 'Thru (Office)'),
-    FieldConfig(name: 'subject', label: 'Subject'),
-    FieldConfig(name: 'body', label: 'Body', maxLines: 5),
-    FieldConfig(name: 'footerBody', label: 'Footer Body (Optional)', maxLines: 3),
-  ];
-
-  final List<FieldConfig> _externalFields = const [
-    FieldConfig(name: 'recipient', label: 'To (Name, Designation, Office, Address)'),
-    FieldConfig(name: 'organization', label: 'Designation / Office'),
-    FieldConfig(name: 'address', label: 'Address'),
-    FieldConfig(name: 'subject', label: 'Subject'),
-    FieldConfig(name: 'body', label: 'Body', maxLines: 5),
-    FieldConfig(name: 'footerBody', label: 'Footer Body (Optional)', maxLines: 3),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final titles = [
       'Dashboard',
       'Certificate of Appearance',
-      'Internal Communication',
-      'External Communication',
-      'Endorsement',
       'Report on Assessment Proceedings',
       'Performance Evaluation Instrument',
       "Assessor's Fee",
       'Document Records',
       'Payment Slip',
+      'Document Monitoring',
       'Centers',
       'Assessors',
       'Assessment Centers',
@@ -80,28 +60,12 @@ class _MainShellState extends State<MainShell> {
     final screens = [
       const DashboardScreen(),
       const CertificateOfAppearanceScreen(),
-      DocumentScreen(
-        slug: AppConstants.internalSlug,
-        title: 'Internal Communication',
-        icon: Icons.message,
-        fields: _internalFields,
-        showLetterhead: true,
-        allowTable: true,
-      ),
-      DocumentScreen(
-        slug: AppConstants.externalSlug,
-        title: 'External Communication',
-        icon: Icons.mail_outline,
-        fields: _externalFields,
-        showLetterhead: true,
-        allowTable: true,
-      ),
-      const EndorsementScreen(),
       const RapScreen(),
       const PeiScreen(),
       const AssessorFeeLetterScreen(),
       DocumentRecordsScreen(key: _documentRecordsKey),
-      const PaymentSlipScreen(),
+      PaymentSlipScreen(key: _paymentSlipKey),
+      const DocumentMonitoringScreen(),
       const CentersScreen(),
       const AssessorsScreen(),
       AssesseesListScreen(key: _assessmentKey, type: 'assessment'),
@@ -123,7 +87,7 @@ class _MainShellState extends State<MainShell> {
             appBar: AppBar(
               title: Text(titles[_selectedIndex]),
               actions: [
-                if (_selectedIndex == 8)
+                if (_selectedIndex == 5)
                   IconButton(
                     icon: const Icon(Icons.refresh),
                     tooltip: 'Refresh records',
@@ -146,11 +110,13 @@ class _MainShellState extends State<MainShell> {
                   _visitedTabs.add(i);
                 });
                 Navigator.pop(context);
-                if (i == 8) {
+                if (i == 5) {
                   _documentRecordsKey.currentState?.load();
-                } else if (i == 12) {
+                } else if (i == 6) {
+                  _paymentSlipKey.currentState?.reload();
+                } else if (i == 10) {
                   _assessmentKey.currentState?.load();
-                } else if (i == 13) {
+                } else if (i == 11) {
                   _trainingKey.currentState?.load();
                 }
               },
