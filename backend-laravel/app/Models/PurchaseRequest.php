@@ -10,7 +10,8 @@ class PurchaseRequest extends Model
         'date_of_creation',
         'purpose',
         'total_amount',
-        'purchase_order',
+        'purchase_request_number',
+        'date_issued',
         'status',
         'receiving_office',
         'remarks',
@@ -18,6 +19,7 @@ class PurchaseRequest extends Model
 
     protected $casts = [
         'date_of_creation' => 'date',
+        'date_issued' => 'date',
         'total_amount' => 'decimal:2',
     ];
 }

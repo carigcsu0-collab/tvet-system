@@ -549,7 +549,14 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
   }
 
   String _formatAmount(dynamic value) {
-    final amount = (value as num?)?.toDouble() ?? 0;
+    if (value == null) return '';
+    double? amount;
+    if (value is num) {
+      amount = value.toDouble();
+    } else {
+      amount = double.tryParse(value.toString());
+    }
+    if (amount == null) return value.toString();
     final peso = String.fromCharCode(8369);
     return '$peso${amount.toStringAsFixed(2)}';
   }
@@ -559,7 +566,8 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
     final dateOfCreation = TextEditingController(text: _formatDate(record?['date_of_creation']));
     final purpose = TextEditingController(text: record?['purpose'] ?? '');
     final totalAmount = TextEditingController(text: record?['total_amount']?.toString() ?? '');
-    final purchaseOrder = TextEditingController(text: record?['purchase_order'] ?? '');
+    final purchaseRequestNumber = TextEditingController(text: record?['purchase_request_number'] ?? '');
+    final dateIssued = TextEditingController(text: _formatDate(record?['date_issued']));
     final receivingOffice = TextEditingController(text: record?['receiving_office'] ?? '');
     final remarks = TextEditingController(text: record?['remarks'] ?? '');
     String status = record?['status'] ?? 'Pending';
@@ -581,7 +589,9 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
                   const SizedBox(height: 8),
                   TextFormField(controller: totalAmount, decoration: const InputDecoration(labelText: 'Total Amount'), keyboardType: TextInputType.number),
                   const SizedBox(height: 8),
-                  TextFormField(controller: purchaseOrder, decoration: const InputDecoration(labelText: 'Purchase Order')),
+                  TextFormField(controller: purchaseRequestNumber, decoration: const InputDecoration(labelText: 'Purchase Request Number')),
+                  const SizedBox(height: 8),
+                  TextFormField(controller: dateIssued, decoration: const InputDecoration(labelText: 'Date Issued (YYYY-MM-DD)')),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     initialValue: status,
@@ -605,7 +615,8 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
                   'date_of_creation': dateOfCreation.text.trim().isEmpty ? null : dateOfCreation.text.trim(),
                   'purpose': purpose.text.trim(),
                   'total_amount': double.tryParse(totalAmount.text) ?? 0,
-                  'purchase_order': purchaseOrder.text.trim(),
+                  'purchase_request_number': purchaseRequestNumber.text.trim(),
+                  'date_issued': dateIssued.text.trim().isEmpty ? null : dateIssued.text.trim(),
                   'status': status,
                   'receiving_office': receivingOffice.text.trim(),
                   'remarks': remarks.text.trim(),
@@ -658,15 +669,16 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
   }
 
   (List<String>, List<List<String>>) _buildExportData() {
-    final headers = ['Date of Creation', 'Purpose', 'Total Amount', 'Purchase Order',
-        'Status', 'Receiving Office', 'Remarks'];
+    final headers = ['Date of Creation', 'Purpose', 'Total Amount', 'Purchase Request Number',
+        'Date Issued', 'Status', 'Receiving Office', 'Remarks'];
     final data = (_records ?? []).map((r) {
       final m = r as Map<String, dynamic>;
       return [
         _formatDate(m['date_of_creation']),
         m['purpose']?.toString() ?? '',
         _formatAmount(m['total_amount']),
-        m['purchase_order']?.toString() ?? '',
+        m['purchase_request_number']?.toString() ?? '',
+        _formatDate(m['date_issued']),
         m['status']?.toString() ?? '',
         m['receiving_office']?.toString() ?? '',
         m['remarks']?.toString() ?? '',
@@ -771,7 +783,8 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
       DataColumn(label: Text('Date Created')),
       DataColumn(label: Text('Purpose')),
       DataColumn(label: Text('Total Amount')),
-      DataColumn(label: Text('PO')),
+      DataColumn(label: Text('PR Number')),
+      DataColumn(label: Text('Date Issued')),
       DataColumn(label: Text('Status')),
       DataColumn(label: Text('Receiving Office')),
       DataColumn(label: Text('Remarks')),
@@ -784,7 +797,8 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
         DataCell(Text(_formatDate(m['date_of_creation']))),
         DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(m['purpose']?.toString() ?? ''))),
         DataCell(Text(_formatAmount(m['total_amount']))),
-        DataCell(Text(m['purchase_order']?.toString() ?? '')),
+        DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
+        DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
         DataCell(Text(m['receiving_office']?.toString() ?? '')),
         DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(m['remarks']?.toString() ?? ''))),
@@ -914,7 +928,14 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
   }
 
   String _formatAmount(dynamic value) {
-    final amount = (value as num?)?.toDouble() ?? 0;
+    if (value == null) return '';
+    double? amount;
+    if (value is num) {
+      amount = value.toDouble();
+    } else {
+      amount = double.tryParse(value.toString());
+    }
+    if (amount == null) return value.toString();
     final peso = String.fromCharCode(8369);
     return '$peso${amount.toStringAsFixed(2)}';
   }
@@ -924,7 +945,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     final dateOfCreation = TextEditingController(text: _formatDate(record?['date_of_creation']));
     final purpose = TextEditingController(text: record?['purpose'] ?? '');
     final totalAmount = TextEditingController(text: record?['total_amount']?.toString() ?? '');
-    final purchaseOrder = TextEditingController(text: record?['purchase_order'] ?? '');
+    final purchaseRequestNumber = TextEditingController(text: record?['purchase_request_number'] ?? '');
+    final dateIssued = TextEditingController(text: _formatDate(record?['date_issued']));
     final receivingOffice = TextEditingController(text: record?['receiving_office'] ?? '');
     final remarks = TextEditingController(text: record?['remarks'] ?? '');
     final orDate = TextEditingController(text: _formatDate(record?['or_date']));
@@ -950,7 +972,9 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   const SizedBox(height: 8),
                   TextFormField(controller: totalAmount, decoration: const InputDecoration(labelText: 'Total Amount'), keyboardType: TextInputType.number),
                   const SizedBox(height: 8),
-                  TextFormField(controller: purchaseOrder, decoration: const InputDecoration(labelText: 'Purchase Order')),
+                  TextFormField(controller: purchaseRequestNumber, decoration: const InputDecoration(labelText: 'Purchase Request Number')),
+                  const SizedBox(height: 8),
+                  TextFormField(controller: dateIssued, decoration: const InputDecoration(labelText: 'Date Issued (YYYY-MM-DD)')),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     initialValue: status,
@@ -984,7 +1008,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   'date_of_creation': dateOfCreation.text.trim().isEmpty ? null : dateOfCreation.text.trim(),
                   'purpose': purpose.text.trim(),
                   'total_amount': double.tryParse(totalAmount.text) ?? 0,
-                  'purchase_order': purchaseOrder.text.trim(),
+                  'purchase_request_number': purchaseRequestNumber.text.trim(),
+                  'date_issued': dateIssued.text.trim().isEmpty ? null : dateIssued.text.trim(),
                   'status': status,
                   'receiving_office': receivingOffice.text.trim(),
                   'remarks': remarks.text.trim(),
@@ -1041,8 +1066,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
   }
 
   (List<String>, List<List<String>>) _buildExportData() {
-    final headers = ['Date of Creation', 'Purpose', 'Total Amount', 'Purchase Order',
-        'Status', 'Receiving Office', 'Remarks', 'OR Date', 'OR Received (Original)',
+    final headers = ['Date of Creation', 'Purpose', 'Total Amount', 'Purchase Request Number',
+        'Date Issued', 'Status', 'Receiving Office', 'Remarks', 'OR Date', 'OR Received (Original)',
         'Attendance Received Date', 'Received'];
     final data = (_records ?? []).map((r) {
       final m = r as Map<String, dynamic>;
@@ -1050,7 +1075,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         _formatDate(m['date_of_creation']),
         m['purpose']?.toString() ?? '',
         _formatAmount(m['total_amount']),
-        m['purchase_order']?.toString() ?? '',
+        m['purchase_request_number']?.toString() ?? '',
+        _formatDate(m['date_issued']),
         m['status']?.toString() ?? '',
         m['receiving_office']?.toString() ?? '',
         m['remarks']?.toString() ?? '',
@@ -1159,7 +1185,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
       DataColumn(label: Text('Date Created')),
       DataColumn(label: Text('Purpose')),
       DataColumn(label: Text('Total')),
-      DataColumn(label: Text('PO')),
+      DataColumn(label: Text('PR Number')),
+      DataColumn(label: Text('Date Issued')),
       DataColumn(label: Text('Status')),
       DataColumn(label: Text('Office')),
       DataColumn(label: Text('OR Date')),
@@ -1175,7 +1202,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         DataCell(Text(_formatDate(m['date_of_creation']))),
         DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 150), child: Text(m['purpose']?.toString() ?? ''))),
         DataCell(Text(_formatAmount(m['total_amount']))),
-        DataCell(Text(m['purchase_order']?.toString() ?? '')),
+        DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
+        DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
         DataCell(Text(m['receiving_office']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['or_date']))),
