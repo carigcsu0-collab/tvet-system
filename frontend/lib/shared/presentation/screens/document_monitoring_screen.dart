@@ -561,6 +561,12 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
     return '$peso${amount.toStringAsFixed(2)}';
   }
 
+  double? _parseAmount(String text) {
+    final cleaned = text.replaceAll(',', '').replaceAll(String.fromCharCode(8369), '').trim();
+    if (cleaned.isEmpty) return null;
+    return double.tryParse(cleaned);
+  }
+
   Future<void> _showForm({Map<String, dynamic>? record}) async {
     final formKey = GlobalKey<FormState>();
     final dateOfCreation = TextEditingController(text: _formatDate(record?['date_of_creation']));
@@ -614,7 +620,7 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
                 final payload = <String, dynamic>{
                   'date_of_creation': dateOfCreation.text.trim().isEmpty ? null : dateOfCreation.text.trim(),
                   'purpose': purpose.text.trim(),
-                  'total_amount': double.tryParse(totalAmount.text) ?? 0,
+                  'total_amount': _parseAmount(totalAmount.text) ?? 0,
                   'purchase_request_number': purchaseRequestNumber.text.trim(),
                   'date_issued': dateIssued.text.trim().isEmpty ? null : dateIssued.text.trim(),
                   'status': status,
@@ -940,6 +946,12 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     return '$peso${amount.toStringAsFixed(2)}';
   }
 
+  double? _parseAmount(String text) {
+    final cleaned = text.replaceAll(',', '').replaceAll(String.fromCharCode(8369), '').trim();
+    if (cleaned.isEmpty) return null;
+    return double.tryParse(cleaned);
+  }
+
   Future<void> _showForm({Map<String, dynamic>? record}) async {
     final formKey = GlobalKey<FormState>();
     final dateOfCreation = TextEditingController(text: _formatDate(record?['date_of_creation']));
@@ -1007,7 +1019,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                 final payload = <String, dynamic>{
                   'date_of_creation': dateOfCreation.text.trim().isEmpty ? null : dateOfCreation.text.trim(),
                   'purpose': purpose.text.trim(),
-                  'total_amount': double.tryParse(totalAmount.text) ?? 0,
+                  'total_amount': _parseAmount(totalAmount.text) ?? 0,
                   'purchase_request_number': purchaseRequestNumber.text.trim(),
                   'date_issued': dateIssued.text.trim().isEmpty ? null : dateIssued.text.trim(),
                   'status': status,
