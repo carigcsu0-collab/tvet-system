@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_theme.dart';
+import '../../../services/update_service.dart';
 import '../widgets/ui_components.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -22,6 +23,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) UpdateService.checkForUpdate(context);
+    });
   }
 
   Future<void> _load() async {
