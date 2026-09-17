@@ -574,7 +574,8 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
     }
     if (amount == null) return value.toString();
     final peso = String.fromCharCode(8369);
-    return '$peso${amount.toStringAsFixed(2)}';
+    final formatted = NumberFormat('#,##0.00', 'en_US').format(amount);
+    return '$peso$formatted';
   }
 
   double? _parseAmount(String text) {
@@ -817,13 +818,13 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
       final m = r as Map<String, dynamic>;
       return DataRow(cells: [
         DataCell(Text(_formatDate(m['date_of_creation']))),
-        DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(m['purpose']?.toString() ?? ''))),
+        DataCell(Text(m['purpose']?.toString() ?? '')),
         DataCell(Text(_formatAmount(m['total_amount']))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
         DataCell(Text(m['receiving_office']?.toString() ?? '')),
-        DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(m['remarks']?.toString() ?? ''))),
+        DataCell(Text(m['remarks']?.toString() ?? '')),
         DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(icon: const Icon(Icons.edit_outlined, size: 20), onPressed: () => _showForm(record: m)),
           IconButton(icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.error), onPressed: () => _delete(m)),
@@ -968,7 +969,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     }
     if (amount == null) return value.toString();
     final peso = String.fromCharCode(8369);
-    return '$peso${amount.toStringAsFixed(2)}';
+    final formatted = NumberFormat('#,##0.00', 'en_US').format(amount);
+    return '$peso$formatted';
   }
 
   double? _parseAmount(String text) {
@@ -1237,7 +1239,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
       final m = r as Map<String, dynamic>;
       return DataRow(cells: [
         DataCell(Text(_formatDate(m['date_of_creation']))),
-        DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 150), child: Text(m['purpose']?.toString() ?? ''))),
+        DataCell(Text(m['purpose']?.toString() ?? '')),
         DataCell(Text(_formatAmount(m['total_amount']))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
