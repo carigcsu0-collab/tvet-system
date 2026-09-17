@@ -22,11 +22,7 @@ class Reimbursement extends Model
     ];
 
     protected $casts = [
-        'date_of_creation' => 'date',
-        'date_issued' => 'date',
         'total_amount' => 'decimal:2',
-        'or_date' => 'date',
-        'attendance_received_date' => 'date',
         'or_received_original' => 'boolean',
         'received' => 'boolean',
     ];

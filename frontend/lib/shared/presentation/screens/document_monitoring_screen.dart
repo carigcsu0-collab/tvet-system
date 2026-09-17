@@ -273,6 +273,13 @@ class _CommunicationTabState extends State<_CommunicationTab>
     if (value == null) return '';
     final text = value.toString();
     if (text.isEmpty) return '';
+    // If it's already a plain Y-m-d string, return as-is (no timezone shift)
+    final plainDateMatch = RegExp(r'^\d{4}-\d{2}-\d{2}$').firstMatch(text);
+    if (plainDateMatch != null) return text;
+    // For ISO8601 strings (e.g. 2026-09-16T16:00:00.000000Z), parse and
+    // format using the date portion directly to avoid UTC-to-local shift
+    final isoMatch = RegExp(r'^(\d{4}-\d{2}-\d{2})').firstMatch(text);
+    if (isoMatch != null) return isoMatch.group(1)!;
     final date = DateTime.tryParse(text);
     if (date != null) return DateFormat('yyyy-MM-dd').format(date);
     return text;
@@ -543,6 +550,13 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
     if (value == null) return '';
     final text = value.toString();
     if (text.isEmpty) return '';
+    // If it's already a plain Y-m-d string, return as-is (no timezone shift)
+    final plainDateMatch = RegExp(r'^\d{4}-\d{2}-\d{2}$').firstMatch(text);
+    if (plainDateMatch != null) return text;
+    // For ISO8601 strings (e.g. 2026-09-16T16:00:00.000000Z), parse and
+    // format using the date portion directly to avoid UTC-to-local shift
+    final isoMatch = RegExp(r'^(\d{4}-\d{2}-\d{2})').firstMatch(text);
+    if (isoMatch != null) return isoMatch.group(1)!;
     final date = DateTime.tryParse(text);
     if (date != null) return DateFormat('yyyy-MM-dd').format(date);
     return text;
@@ -928,6 +942,13 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     if (value == null) return '';
     final text = value.toString();
     if (text.isEmpty) return '';
+    // If it's already a plain Y-m-d string, return as-is (no timezone shift)
+    final plainDateMatch = RegExp(r'^\d{4}-\d{2}-\d{2}$').firstMatch(text);
+    if (plainDateMatch != null) return text;
+    // For ISO8601 strings (e.g. 2026-09-16T16:00:00.000000Z), parse and
+    // format using the date portion directly to avoid UTC-to-local shift
+    final isoMatch = RegExp(r'^(\d{4}-\d{2}-\d{2})').firstMatch(text);
+    if (isoMatch != null) return isoMatch.group(1)!;
     final date = DateTime.tryParse(text);
     if (date != null) return DateFormat('yyyy-MM-dd').format(date);
     return text;

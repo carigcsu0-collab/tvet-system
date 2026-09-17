@@ -18,8 +18,6 @@ class PurchaseRequest extends Model
     ];
 
     protected $casts = [
-        'date_of_creation' => 'date',
-        'date_issued' => 'date',
         'total_amount' => 'decimal:2',
     ];
 }

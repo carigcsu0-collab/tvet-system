@@ -18,7 +18,5 @@ class CommunicationRecord extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
-        'received_date' => 'date',
     ];
 }
