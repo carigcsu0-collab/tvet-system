@@ -465,14 +465,19 @@ class _CommunicationTabState extends State<_CommunicationTab>
         ),
         Expanded(
           child: list.isEmpty
-            ? EmptyState(icon: Icons.mail_outline, title: 'No records yet', subtitle: 'Add a document to start tracking')
-            : SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: AppTheme.spaceXxl),
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
-                  columns: columns,
-                  rows: rows,
+            ? const EmptyState(icon: Icons.mail_outline, title: 'No records yet', subtitle: 'Add a document to start tracking')
+            : Scrollbar(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceXxl),
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                      columns: columns,
+                      rows: rows,
+                    ),
+                  ),
                 ),
               ),
         ),
@@ -862,13 +867,18 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
         Expanded(
           child: list.isEmpty
             ? const EmptyState(icon: Icons.shopping_cart_outlined, title: 'No records yet', subtitle: 'Add a purchase request to start tracking')
-            : SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: AppTheme.spaceXxl),
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
-                  columns: columns,
-                  rows: rows,
+            : Scrollbar(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceXxl),
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                      columns: columns,
+                      rows: rows,
+                    ),
+                  ),
                 ),
               ),
         ),
@@ -1283,13 +1293,18 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         Expanded(
           child: list.isEmpty
             ? const EmptyState(icon: Icons.account_balance_wallet_outlined, title: 'No records yet', subtitle: 'Add a reimbursement to start tracking')
-            : SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: AppTheme.spaceXxl),
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
-                  columns: columns,
-                  rows: rows,
+            : Scrollbar(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceXxl),
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                      columns: columns,
+                      rows: rows,
+                    ),
+                  ),
                 ),
               ),
         ),
