@@ -14,6 +14,7 @@ import 'shared/presentation/screens/document_records_screen.dart';
 import 'shared/presentation/screens/payment_slip_screen.dart';
 import 'shared/presentation/screens/pei_screen.dart';
 import 'shared/presentation/screens/rap_screen.dart';
+import 'shared/presentation/screens/training_batches_screen.dart';
 import 'shared/presentation/screens/users_screen.dart';
 import 'shared/presentation/widgets/app_nav_drawer.dart';
 import 'shared/presentation/widgets/window_title_bar.dart';
@@ -24,6 +25,7 @@ final _documentRecordsKey = GlobalKey<DocumentRecordsScreenState>();
 final _assessmentKey = GlobalKey<AssesseesListScreenState>();
 final _trainingKey = GlobalKey<AssesseesListScreenState>();
 final _paymentSlipKey = GlobalKey<PaymentSlipScreenState>();
+final _trainingBatchesKey = GlobalKey<TrainingBatchesScreenState>();
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -52,6 +54,7 @@ class _MainShellState extends State<MainShell> {
       'Assessors',
       'Assessment Centers',
       'Training Centers',
+      'Training Attendance & Billing',
       'User Accounts',
       'Account Logs',
       'Document Code Settings',
@@ -70,6 +73,7 @@ class _MainShellState extends State<MainShell> {
       const AssessorsScreen(),
       AssesseesListScreen(key: _assessmentKey, type: 'assessment'),
       AssesseesListScreen(key: _trainingKey, type: 'training'),
+      TrainingBatchesScreen(key: _trainingBatchesKey),
       const UsersScreen(),
       const ActivityLogsScreen(),
       const DocumentCodeSettingsScreen(),
@@ -118,6 +122,8 @@ class _MainShellState extends State<MainShell> {
                   _assessmentKey.currentState?.load();
                 } else if (i == 11) {
                   _trainingKey.currentState?.load();
+                } else if (i == 12) {
+                  _trainingBatchesKey.currentState?.load();
                 }
               },
             ),

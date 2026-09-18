@@ -175,6 +175,11 @@ class AppNavDrawer extends StatelessWidget {
           selectedIcon: Icon(Icons.school),
           label: Text('Training Centers'),
         ),
+        const NavigationDrawerDestination(
+          icon: Icon(Icons.fact_check_outlined),
+          selectedIcon: Icon(Icons.fact_check),
+          label: Text('Training Attendance & Billing'),
+        ),
 
         const SizedBox(height: 8),
         const Divider(),

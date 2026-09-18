@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PeiDocumentController;
 use App\Http\Controllers\Api\RapDocumentController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\TrainingAttendanceController;
+use App\Http\Controllers\Api\TrainingBatchController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -109,4 +111,20 @@ Route::middleware('api.auth')->group(function () {
     Route::delete('/payment-slips/{paymentSlip}', [PaymentSlipController::class, 'destroy']);
     Route::post('/payment-slips/{paymentSlip}/printed', [PaymentSlipController::class, 'incrementPrinted']);
     Route::post('/payment-slips/{paymentSlip}/released', [PaymentSlipController::class, 'incrementReleased']);
+
+    // Training center attendance & billing
+    Route::get('/training-batches', [TrainingBatchController::class, 'index']);
+    Route::post('/training-batches', [TrainingBatchController::class, 'store']);
+    Route::put('/training-batches/{trainingBatch}', [TrainingBatchController::class, 'update']);
+    Route::delete('/training-batches/{trainingBatch}', [TrainingBatchController::class, 'destroy']);
+    Route::get('/training-batches/{trainingBatch}/trainees', [TrainingBatchController::class, 'trainees']);
+    Route::get('/training-batches/{trainingBatch}/available-trainees', [TrainingBatchController::class, 'availableTrainees']);
+    Route::post('/training-batches/{trainingBatch}/trainees', [TrainingBatchController::class, 'assignTrainees']);
+    Route::delete('/training-batches/{trainingBatch}/trainees/{assessee}', [TrainingBatchController::class, 'unassignTrainee']);
+    Route::get('/training-batches/{trainingBatch}/billing', [TrainingBatchController::class, 'billing']);
+
+    Route::get('/training-batches/{trainingBatch}/attendance', [TrainingAttendanceController::class, 'show']);
+    Route::post('/training-batches/{trainingBatch}/attendance/dates', [TrainingAttendanceController::class, 'addDate']);
+    Route::delete('/training-batches/{trainingBatch}/attendance/dates', [TrainingAttendanceController::class, 'removeDate']);
+    Route::put('/training-batches/{trainingBatch}/attendance/records', [TrainingAttendanceController::class, 'updateRecord']);
 });

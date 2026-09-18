@@ -14,6 +14,7 @@ class Assessee extends Model
 
     protected $fillable = [
         'assessment_center_id',
+        'training_batch_id',
         'name',
         'last_name',
         'first_name',
@@ -54,5 +55,10 @@ class Assessee extends Model
     public function center(): BelongsTo
     {
         return $this->belongsTo(Center::class, 'assessment_center_id');
+    }
+
+    public function trainingBatch(): BelongsTo
+    {
+        return $this->belongsTo(TrainingBatch::class, 'training_batch_id');
     }
 }
