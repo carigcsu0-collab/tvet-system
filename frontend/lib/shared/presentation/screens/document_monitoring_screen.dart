@@ -983,12 +983,33 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     return double.tryParse(cleaned);
   }
 
+  /// Sum of the individual receipt amounts, with a count suffix when there
+  /// is more than one (e.g. "₱1,500.00 (3)"). Falls back to the backend's
+  /// computed `receipt_total` if `receipt_amounts` isn't present.
+  String _formatReceiptTotal(Map<String, dynamic> m) {
+    final amounts = (m['receipt_amounts'] as List<dynamic>?)
+        ?.map((a) => (a is num) ? a.toDouble() : double.tryParse(a.toString()) ?? 0)
+        .toList();
+    if (amounts == null || amounts.isEmpty) {
+      final fallback = m['receipt_total'];
+      if (fallback == null) return '';
+      return _formatAmount(fallback);
+    }
+    final total = amounts.fold<double>(0, (sum, v) => sum + v);
+    final formatted = _formatAmount(total);
+    return amounts.length > 1 ? '$formatted (${amounts.length})' : formatted;
+  }
+
   Future<void> _showForm({Map<String, dynamic>? record}) async {
     final formKey = GlobalKey<FormState>();
     final dateOfCreation = TextEditingController(text: _formatDate(record?['date_of_creation']));
     final purpose = TextEditingController(text: record?['purpose'] ?? '');
     final totalAmount = TextEditingController(text: record?['total_amount']?.toString() ?? '');
-    final receiptTotalAmount = TextEditingController(text: record?['receipt_total_amount']?.toString() ?? '');
+    final receiptAmountsRaw = (record?['receipt_amounts'] as List<dynamic>?) ?? [];
+    final receiptAmounts = <TextEditingController>[
+      for (final amount in receiptAmountsRaw) TextEditingController(text: amount.toString()),
+      if (receiptAmountsRaw.isEmpty) TextEditingController(),
+    ];
     final purchaseRequestNumber = TextEditingController(text: record?['purchase_request_number'] ?? '');
     final dateIssued = TextEditingController(text: _formatDate(record?['date_issued']));
     final receivingOffice = TextEditingController(text: record?['receiving_office'] ?? '');
@@ -1016,7 +1037,40 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   const SizedBox(height: 8),
                   TextFormField(controller: totalAmount, decoration: const InputDecoration(labelText: 'Total Amount'), keyboardType: TextInputType.number),
                   const SizedBox(height: 8),
-                  TextFormField(controller: receiptTotalAmount, decoration: const InputDecoration(labelText: 'Total Amount of Receipt'), keyboardType: TextInputType.number),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Total Amount of Receipt (up to 10)', style: Theme.of(context).textTheme.bodySmall),
+                  ),
+                  const SizedBox(height: 4),
+                  for (var i = 0; i < receiptAmounts.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: receiptAmounts[i],
+                              decoration: InputDecoration(labelText: 'Receipt ${i + 1} Amount'),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          if (receiptAmounts.length > 1)
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppTheme.error),
+                              onPressed: () => setDialogState(() => receiptAmounts.removeAt(i)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  if (receiptAmounts.length < 10)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => setDialogState(() => receiptAmounts.add(TextEditingController())),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Receipt Amount'),
+                      ),
+                    ),
                   const SizedBox(height: 8),
                   TextFormField(controller: purchaseRequestNumber, decoration: const InputDecoration(labelText: 'Purchase Request Number')),
                   const SizedBox(height: 8),
@@ -1054,7 +1108,10 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   'date_of_creation': dateOfCreation.text.trim().isEmpty ? null : dateOfCreation.text.trim(),
                   'purpose': purpose.text.trim(),
                   'total_amount': _parseAmount(totalAmount.text) ?? 0,
-                  'receipt_total_amount': _parseAmount(receiptTotalAmount.text),
+                  'receipt_amounts': receiptAmounts
+                      .map((c) => _parseAmount(c.text))
+                      .whereType<double>()
+                      .toList(),
                   'purchase_request_number': purchaseRequestNumber.text.trim(),
                   'date_issued': dateIssued.text.trim().isEmpty ? null : dateIssued.text.trim(),
                   'status': status,
@@ -1122,7 +1179,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         _formatDate(m['date_of_creation']),
         m['purpose']?.toString() ?? '',
         _formatAmount(m['total_amount']),
-        _formatAmount(m['receipt_total_amount']),
+        _formatReceiptTotal(m),
         m['purchase_request_number']?.toString() ?? '',
         _formatDate(m['date_issued']),
         m['status']?.toString() ?? '',
@@ -1252,7 +1309,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         DataCell(Text(_formatDate(m['date_of_creation']))),
         DataCell(SizedBox(width: 220, child: Text(m['purpose']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatAmount(m['total_amount']))),
-        DataCell(Text(_formatAmount(m['receipt_total_amount']))),
+        DataCell(Text(_formatReceiptTotal(m))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
