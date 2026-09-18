@@ -72,37 +72,6 @@ class _DocumentScreenState extends State<DocumentScreen> {
     _loadData();
   }
 
-  void _enterEditMode(String code, Map<String, dynamic> payload) {
-    setState(() {
-      _isEditMode = true;
-      _existingCode = code;
-      _codeController.text = code;
-      if (payload['date'] != null) {
-        _dateController.text = payload['date'].toString();
-      }
-      if (payload['greetings'] != null) {
-        _greetingsController.text = payload['greetings'].toString();
-      }
-      for (int i = 0; i < widget.fields.length; i++) {
-        final name = widget.fields[i].name;
-        if (payload[name] != null) {
-          _controllers[i].text = payload[name].toString();
-        }
-      }
-      if (payload['coordinatorName'] != null) {
-        _coordinator = payload['coordinatorName'].toString();
-      }
-      if (payload['coordinatorTitle'] != null) {
-        _coordinatorTitle = payload['coordinatorTitle'].toString();
-      }
-      if (payload['table'] != null) {
-        _table = (payload['table'] as List<dynamic>)
-            .map((e) => Map<String, String>.from(e as Map))
-            .toList();
-      }
-    });
-  }
-
   Future<void> _loadData() async {
     try {
       final results = await Future.wait([

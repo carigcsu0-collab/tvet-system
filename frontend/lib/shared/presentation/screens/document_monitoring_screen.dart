@@ -65,7 +65,7 @@ class _DocumentMonitoringScreenState extends State<DocumentMonitoringScreen>
       children: [
         TabBar(
           controller: _tabController,
-          tabs: [
+          tabs: const [
             Tab(icon: Icon(Icons.mail_outlined), text: 'Internal'),
             Tab(icon: Icon(Icons.forward_to_inbox_outlined), text: 'External'),
             Tab(icon: Icon(Icons.shopping_cart_outlined), text: 'Purchase Request'),
@@ -75,11 +75,11 @@ class _DocumentMonitoringScreenState extends State<DocumentMonitoringScreen>
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: [
+            children: const [
               _CommunicationTab(type: 'internal', statuses: _commStatuses),
               _CommunicationTab(type: 'external', statuses: _commStatuses),
-              const _PurchaseRequestTab(statuses: _prStatuses),
-              const _ReimbursementTab(statuses: _prStatuses),
+              _PurchaseRequestTab(statuses: _prStatuses),
+              _ReimbursementTab(statuses: _prStatuses),
             ],
           ),
         ),
@@ -352,7 +352,7 @@ class _CommunicationTabState extends State<_CommunicationTab>
     try {
       final (headers, data) = _buildExportData();
       final amp = String.fromCharCode(38);
-      final esc = (String s) => s.replaceAll(amp, '${amp}amp;')
+      String esc(String s) => s.replaceAll(amp, '${amp}amp;')
           .replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
       final buf = StringBuffer()
         ..writeln('<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">')
@@ -405,7 +405,7 @@ class _CommunicationTabState extends State<_CommunicationTab>
     if (_error != null) return ErrorState(message: _error!, onRetry: _load);
 
     final list = _records ?? [];
-    final columns = const [
+    const columns = [
       DataColumn(label: Text('Doc Code')),
       DataColumn(label: Text('Title')),
       DataColumn(label: Text('Date')),
@@ -752,7 +752,7 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
     try {
       final (headers, data) = _buildExportData();
       final amp = String.fromCharCode(38);
-      final esc = (String s) => s.replaceAll(amp, '${amp}amp;').replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
+      String esc(String s) => s.replaceAll(amp, '${amp}amp;').replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
       final buf = StringBuffer()
         ..writeln('<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">')
         ..writeln('<head><meta charset="utf-8"><style>body{font-family:Arial;font-size:10pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:4pt}th{background:#d9d9d9;font-weight:bold}</style></head><body>')
@@ -804,7 +804,7 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
     if (_error != null) return ErrorState(message: _error!, onRetry: _load);
 
     final list = _records ?? [];
-    final columns = const [
+    const columns = [
       DataColumn(label: Text('Date Created')),
       DataColumn(label: Text('Purpose')),
       DataColumn(label: Text('Total Amount')),
@@ -1234,7 +1234,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     try {
       final (headers, data) = _buildExportData();
       final amp = String.fromCharCode(38);
-      final esc = (String s) => s.replaceAll(amp, '${amp}amp;').replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
+      String esc(String s) => s.replaceAll(amp, '${amp}amp;').replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
       final buf = StringBuffer()
         ..writeln('<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">')
         ..writeln('<head><meta charset="utf-8"><style>body{font-family:Arial;font-size:10pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:4pt}th{background:#d9d9d9;font-weight:bold}</style></head><body>')
@@ -1286,7 +1286,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     if (_error != null) return ErrorState(message: _error!, onRetry: _load);
 
     final list = _records ?? [];
-    final columns = const [
+    const columns = [
       DataColumn(label: Text('Date Created')),
       DataColumn(label: Text('Purpose')),
       DataColumn(label: Text('Total')),

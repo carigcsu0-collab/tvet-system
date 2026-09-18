@@ -454,7 +454,7 @@ class _TrainingAttendanceScreenState extends State<TrainingAttendanceScreen> {
     try {
       final (headers, data) = _buildExportData();
       final amp = String.fromCharCode(38);
-      final esc = (String s) => s.replaceAll(amp, '${amp}amp;').replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
+      String esc(String s) => s.replaceAll(amp, '${amp}amp;').replaceAll('<', '${amp}lt;').replaceAll('>', '${amp}gt;');
       final buf = StringBuffer()
         ..writeln('<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">')
         ..writeln('<head><meta charset="utf-8"><style>body{font-family:Arial;font-size:9pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:3pt;text-align:center}th{background:#d9d9d9;font-weight:bold}</style></head><body>')

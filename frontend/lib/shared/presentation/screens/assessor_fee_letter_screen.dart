@@ -4,7 +4,6 @@ import '../../../core/api_client.dart';
 import '../../../core/app_theme.dart';
 import '../../../core/constants.dart';
 import '../widgets/ui_components.dart';
-import 'print_preview_screen.dart';
 
 class AssessorFeeLetterScreen extends StatefulWidget {
   const AssessorFeeLetterScreen({super.key});
@@ -29,19 +28,11 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
   List<Map<String, dynamic>> _tableRows = [];
   List<String> _availableQualifications = [];
   String? _selectedQualification;
-  String? _coordinator;
-  final String _coordinatorTitle = 'Campus TVET Coordinator';
   List<dynamic>? _users;
   String? _selectedUserId;
   List<String> _selectedDesignations = [];
   bool _loading = true;
   bool _generating = false;
-  bool _saving = false;
-  Map<String, dynamic>? _generated;
-  final _officeController = TextEditingController();
-  final _specialOrderNumberController = TextEditingController();
-  final _specialOrderDateController = TextEditingController();
-  bool _updatingStatus = false;
 
   static final DateFormat _displayFormat = DateFormat('MMMM dd, yyyy');
   static final DateFormat _storeFormat = DateFormat('yyyy-MM-dd');
@@ -103,18 +94,6 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
     return (u['designations'] as List<dynamic>? ?? [])
         .map((d) => d.toString())
         .toList();
-  }
-
-  String get _selectedSignatoryName {
-    if (_selectedUserId == null) return _coordinator ?? '';
-    final u = _users?.firstWhere(
-      (e) => e['id']?.toString() == _selectedUserId,
-      orElse: () => <String, dynamic>{},
-    );
-    if (u == null) return '';
-    final name = u['name']?.toString() ?? '';
-    final ext = u['extension_name']?.toString() ?? '';
-    return ext.isNotEmpty ? '$name $ext' : name;
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
@@ -232,81 +211,6 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
     }
   }
 
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
-    try {
-      final payload = {
-        'to': _toController.text.trim(),
-        'from': _fromController.text.trim(),
-        'subject': _subjectController.text.trim(),
-        'date': _dateController.text.trim(),
-        'assessment_date': _dateRangeLabel(),
-        'fee_per_assessee': _feePerAssesseeController.text.trim(),
-        'body': _bodyController.text.trim(),
-        'footer_body': _footerBodyController.text.trim(),
-        'table': _tableRows,
-        'coordinatorName': _selectedSignatoryName.isNotEmpty
-            ? _selectedSignatoryName
-            : (_coordinator ?? ''),
-        'coordinatorTitle': _selectedSignatoryName.isNotEmpty
-            ? _selectedDesignations.join(', ')
-            : _coordinatorTitle,
-      };
-      final res = await ApiClient.post(
-        '/documents/${AppConstants.internalSlug}',
-        data: payload,
-      );
-      setState(() => _generated = res.data as Map<String, dynamic>);
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Assessor fee saved')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed: $e')));
-      }
-    } finally {
-      setState(() => _saving = false);
-    }
-  }
-
-  Future<void> _updateStatus(String newStatus) async {
-    if (_generated == null) return;
-    final code = _generated!['code']?.toString() ?? '';
-    if (code.isEmpty) return;
-    setState(() => _updatingStatus = true);
-    try {
-      final data = <String, dynamic>{
-        'status': newStatus,
-        if (newStatus == 'received') 'received_by_office': _officeController.text.trim(),
-        if (newStatus == 'special_order') ...{
-          'special_order_number': _specialOrderNumberController.text.trim(),
-          'special_order_date': _specialOrderDateController.text.trim(),
-        },
-        if (newStatus == 'voucher_received') 'voucher_received': true,
-      };
-      final res = await ApiClient.put('/documents/$code/status', data: data);
-      setState(() {
-        _generated = res.data as Map<String, dynamic>;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Status updated to: $newStatus')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update status: $e')),
-        );
-      }
-    } finally {
-      setState(() => _updatingStatus = false);
-    }
-  }
-
   @override
   void dispose() {
     _codeController.dispose();
@@ -319,9 +223,6 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
     _feePerAssesseeController.dispose();
     _bodyController.dispose();
     _footerBodyController.dispose();
-    _officeController.dispose();
-    _specialOrderNumberController.dispose();
-    _specialOrderDateController.dispose();
     super.dispose();
   }
 
@@ -639,47 +540,6 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                         ),
                       ),
                     const SizedBox(height: AppTheme.spaceLg),
-
-                    // Footer body section
-                    const SectionHeader(
-                      icon: Icons.edit_note,
-                      imageUrl: 'https://csu.edu.ph/img/csulogo_index.png',
-                      title: 'Closing Remarks (Optional)',
-                      subtitle: 'Additional content after the fee table',
-                    ),
-                    const SizedBox(height: AppTheme.spaceMd),
-                    TextFormField(
-                      controller: _footerBodyController,
-                      decoration: const InputDecoration(
-                        labelText: 'Footer Body',
-                        hintText: 'Closing paragraph after the table',
-                      ),
-                      minLines: 3,
-                      maxLines: 6,
-                      textAlign: TextAlign.justify,
-                    ),
-                    const SizedBox(height: AppTheme.spaceLg),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _saving ? null : _save,
-                        icon: _saving
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save),
-                        label: Text(_saving ? 'Saving...' : 'Save Document'),
-                      ),
-                    ),
-                    if (_generated != null) ...[
-                      const SizedBox(height: AppTheme.spaceLg),
-                      _buildStatusWorkflow(),
-                    ],
                   ],
                 ),
               ),
@@ -690,182 +550,4 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
     );
   }
 
-  Widget _buildStatusWorkflow() {
-    final status = _generated!['status']?.toString() ?? 'saved';
-    final receivedAt = _generated!['received_at']?.toString() ?? '';
-    final receivedByOffice = _generated!['received_by_office']?.toString() ?? '';
-    final specialOrderNumber = _generated!['special_order_number']?.toString() ?? '';
-    final specialOrderDate = _generated!['special_order_date']?.toString() ?? '';
-    final voucherReceived = _generated!['voucher_received'] == true;
-
-    final statusLabels = {
-      'saved': 'Saved',
-      'received': 'Received',
-      'special_order': 'Special Order',
-      'voucher_received': 'Voucher Received',
-    };
-
-    final statusBadgeMap = {
-      'saved': StatusBadge.info(statusLabels['saved']!),
-      'received': StatusBadge.warning(statusLabels['received']!),
-      'special_order': StatusBadge.info(statusLabels['special_order']!),
-      'voucher_received': StatusBadge.success(statusLabels['voucher_received']!),
-    };
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.csuMaroon.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: AppTheme.csuMaroon.withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Code + status badge
-          Row(
-            children: [
-              Text(
-                'Saved: ${_generated!['code']}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: AppTheme.spaceMd),
-              statusBadgeMap[status] ?? StatusBadge.info(status),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: () {
-                  final code = _generated!['code']?.toString() ?? '';
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => PrintPreviewScreen(code: code),
-                    ),
-                  );
-                },
-                icon: Icon(Icons.print,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppTheme.csuGoldLight
-                        : AppTheme.success),
-                label: Text(
-                  'Print / View',
-                  style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppTheme.csuGoldLight
-                        : AppTheme.success,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Divider(),
-
-          // Received info
-          if (receivedAt.isNotEmpty) ...[
-            Text(
-              'Received by: ${receivedByOffice.isEmpty ? "N/A" : receivedByOffice}',
-              style: const TextStyle(fontSize: 13),
-            ),
-            Text(
-              'Received at: $receivedAt',
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-          ],
-
-          // Special order info
-          if (specialOrderNumber.isNotEmpty || specialOrderDate.isNotEmpty) ...[
-            Text(
-              'Special Order: $specialOrderNumber',
-              style: const TextStyle(fontSize: 13),
-            ),
-            if (specialOrderDate.isNotEmpty)
-              Text(
-                'Special Order Date: $specialOrderDate',
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
-              ),
-            const SizedBox(height: AppTheme.spaceSm),
-          ],
-
-          // Voucher checkbox
-          if (status == 'special_order' || voucherReceived) ...[
-            CheckboxListTile(
-              value: voucherReceived,
-              onChanged: _updatingStatus
-                  ? null
-                  : (v) {
-                      if (v == true) {
-                        _updateStatus('voucher_received');
-                      }
-                    },
-              title: const Text('Received with Voucher'),
-              subtitle: voucherReceived
-                  ? const Text('Voucher has been received', style: TextStyle(fontSize: 12))
-                  : const Text('Check when voucher is received', style: TextStyle(fontSize: 12)),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-          ],
-
-          // Action buttons based on status
-          if (status == 'saved') ...[
-            const Text('Mark as Received:', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: AppTheme.spaceSm),
-            TextFormField(
-              controller: _officeController,
-              decoration: const InputDecoration(
-                labelText: 'Received by Office',
-                isDense: true,
-                helperText: 'Which office received this document',
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            FilledButton.icon(
-              onPressed: _updatingStatus ? null : () => _updateStatus('received'),
-              icon: const Icon(Icons.mark_email_read, size: 18),
-              label: const Text('Mark Received'),
-            ),
-          ],
-
-          if (status == 'received') ...[
-            const Text('Add Special Order:', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: AppTheme.spaceSm),
-            TextFormField(
-              controller: _specialOrderNumberController,
-              decoration: const InputDecoration(
-                labelText: 'Special Order Number',
-                isDense: true,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            TextFormField(
-              controller: _specialOrderDateController,
-              readOnly: true,
-              onTap: () => _pickDate(_specialOrderDateController),
-              decoration: InputDecoration(
-                labelText: 'Special Order Date',
-                isDense: true,
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.calendar_today, size: 18),
-                  onPressed: () => _pickDate(_specialOrderDateController),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            FilledButton.icon(
-              onPressed: _updatingStatus ? null : () => _updateStatus('special_order'),
-              icon: const Icon(Icons.assignment_turned_in, size: 18),
-              label: const Text('Submit Special Order'),
-            ),
-          ],
-
-          if (_updatingStatus)
-            const Padding(
-              padding: EdgeInsets.only(top: AppTheme.spaceSm),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-        ],
-      ),
-    );
-  }
 }

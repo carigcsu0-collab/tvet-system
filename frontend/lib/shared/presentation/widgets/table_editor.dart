@@ -176,7 +176,7 @@ class TableEditorState extends State<TableEditor> {
                           ],
                         ),
                       ),
-                    SizedBox(width: _actionColWidth),
+                    const SizedBox(width: _actionColWidth),
                   ],
                 ),
                 const Divider(height: 1),

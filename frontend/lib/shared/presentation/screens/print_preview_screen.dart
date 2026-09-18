@@ -814,10 +814,10 @@ class _DocumentPreview extends StatelessWidget {
 
     // Convert PDF points to screen pixels (1 pt = 1.333px at 96dpi)
     final widthPx = pageFormat.width * 1.333;
-    final leftMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
-    final rightMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
-    final topMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
-    final bottomMarginPx = 1.5 * PdfPageFormat.inch * 1.333;
+    const leftMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
+    const rightMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
+    const topMarginPx = 0.5 * PdfPageFormat.inch * 1.333;
+    const bottomMarginPx = 1.5 * PdfPageFormat.inch * 1.333;
     // Sidebar scales proportionally with page width (119.4px is ~20% of A4 width 595px)
     final sidebarWidthPx = widthPx * 0.20;
     // Logo height scales with page size (58px for A4 width 595px)
@@ -825,7 +825,7 @@ class _DocumentPreview extends StatelessWidget {
     // Content left start = sidebar + left margin
     final contentLeftPx = sidebarWidthPx + leftMarginPx;
     // 1.5 inch in px for sidebar bottom spacing
-    final sidebarBottomSpacing = 1.5 * PdfPageFormat.inch * 1.333;
+    const sidebarBottomSpacing = 1.5 * PdfPageFormat.inch * 1.333;
     // The page must have a FIXED height matching the real page format,
     // exactly like the actual PDF export/print. Otherwise the Stack shrinks
     // to fit the content (mainAxisSize.min column), making the "page" box
