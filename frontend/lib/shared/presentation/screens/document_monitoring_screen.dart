@@ -420,12 +420,12 @@ class _CommunicationTabState extends State<_CommunicationTab>
       final m = r as Map<String, dynamic>;
       return DataRow(cells: [
         DataCell(Text(m['document_code']?.toString() ?? '')),
-        DataCell(Text(m['document_title']?.toString() ?? '')),
+        DataCell(SizedBox(width: 220, child: Text(m['document_title']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatDate(m['date']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
         DataCell(Text(m['office_received']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['received_date']))),
-        DataCell(Text(m['remarks']?.toString() ?? '')),
+        DataCell(SizedBox(width: 220, child: Text(m['remarks']?.toString() ?? '', softWrap: true))),
         DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(icon: const Icon(Icons.edit_outlined, size: 20), onPressed: () => _showForm(record: m)),
           IconButton(icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.error), onPressed: () => _delete(m)),
@@ -472,6 +472,8 @@ class _CommunicationTabState extends State<_CommunicationTab>
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                    dataRowMinHeight: 48,
+                    dataRowMaxHeight: double.infinity,
                     columns: columns,
                     rows: rows,
                   ),
@@ -818,13 +820,13 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
       final m = r as Map<String, dynamic>;
       return DataRow(cells: [
         DataCell(Text(_formatDate(m['date_of_creation']))),
-        DataCell(Text(m['purpose']?.toString() ?? '')),
+        DataCell(SizedBox(width: 220, child: Text(m['purpose']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatAmount(m['total_amount']))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
         DataCell(Text(m['receiving_office']?.toString() ?? '')),
-        DataCell(Text(m['remarks']?.toString() ?? '')),
+        DataCell(SizedBox(width: 220, child: Text(m['remarks']?.toString() ?? '', softWrap: true))),
         DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(icon: const Icon(Icons.edit_outlined, size: 20), onPressed: () => _showForm(record: m)),
           IconButton(icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.error), onPressed: () => _delete(m)),
@@ -871,6 +873,8 @@ class _PurchaseRequestTabState extends State<_PurchaseRequestTab>
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                    dataRowMinHeight: 48,
+                    dataRowMaxHeight: double.infinity,
                     columns: columns,
                     rows: rows,
                   ),
@@ -1240,13 +1244,13 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
       final m = r as Map<String, dynamic>;
       return DataRow(cells: [
         DataCell(Text(_formatDate(m['date_of_creation']))),
-        DataCell(Text(m['purpose']?.toString() ?? '')),
+        DataCell(SizedBox(width: 220, child: Text(m['purpose']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatAmount(m['total_amount']))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
         DataCell(Text(m['receiving_office']?.toString() ?? '')),
-        DataCell(Text(m['remarks']?.toString() ?? '')),
+        DataCell(SizedBox(width: 220, child: Text(m['remarks']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatDate(m['or_date']))),
         DataCell(m['or_received_original'] == true ? StatusBadge.success('Yes') : StatusBadge.warning('No')),
         DataCell(Text(_formatDate(m['attendance_received_date']))),
@@ -1297,6 +1301,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     headingRowColor: WidgetStateColor.resolveWith((_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                    dataRowMinHeight: 48,
+                    dataRowMaxHeight: double.infinity,
                     columns: columns,
                     rows: rows,
                   ),
