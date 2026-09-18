@@ -10,6 +10,7 @@ class Reimbursement extends Model
         'date_of_creation',
         'purpose',
         'total_amount',
+        'receipt_total_amount',
         'purchase_request_number',
         'date_issued',
         'status',
@@ -23,6 +24,7 @@ class Reimbursement extends Model
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'receipt_total_amount' => 'decimal:2',
         'or_received_original' => 'boolean',
         'received' => 'boolean',
     ];

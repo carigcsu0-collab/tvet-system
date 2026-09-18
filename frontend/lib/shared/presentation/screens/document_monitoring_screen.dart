@@ -988,6 +988,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     final dateOfCreation = TextEditingController(text: _formatDate(record?['date_of_creation']));
     final purpose = TextEditingController(text: record?['purpose'] ?? '');
     final totalAmount = TextEditingController(text: record?['total_amount']?.toString() ?? '');
+    final receiptTotalAmount = TextEditingController(text: record?['receipt_total_amount']?.toString() ?? '');
     final purchaseRequestNumber = TextEditingController(text: record?['purchase_request_number'] ?? '');
     final dateIssued = TextEditingController(text: _formatDate(record?['date_issued']));
     final receivingOffice = TextEditingController(text: record?['receiving_office'] ?? '');
@@ -1014,6 +1015,8 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   TextFormField(controller: purpose, decoration: const InputDecoration(labelText: 'Purpose'), maxLines: 3),
                   const SizedBox(height: 8),
                   TextFormField(controller: totalAmount, decoration: const InputDecoration(labelText: 'Total Amount'), keyboardType: TextInputType.number),
+                  const SizedBox(height: 8),
+                  TextFormField(controller: receiptTotalAmount, decoration: const InputDecoration(labelText: 'Total Amount of Receipt'), keyboardType: TextInputType.number),
                   const SizedBox(height: 8),
                   TextFormField(controller: purchaseRequestNumber, decoration: const InputDecoration(labelText: 'Purchase Request Number')),
                   const SizedBox(height: 8),
@@ -1051,6 +1054,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
                   'date_of_creation': dateOfCreation.text.trim().isEmpty ? null : dateOfCreation.text.trim(),
                   'purpose': purpose.text.trim(),
                   'total_amount': _parseAmount(totalAmount.text) ?? 0,
+                  'receipt_total_amount': _parseAmount(receiptTotalAmount.text),
                   'purchase_request_number': purchaseRequestNumber.text.trim(),
                   'date_issued': dateIssued.text.trim().isEmpty ? null : dateIssued.text.trim(),
                   'status': status,
@@ -1109,7 +1113,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
   }
 
   (List<String>, List<List<String>>) _buildExportData() {
-    final headers = ['Date of Creation', 'Purpose', 'Total Amount', 'Purchase Request Number',
+    final headers = ['Date of Creation', 'Purpose', 'Total Amount', 'Total Amount of Receipt', 'Purchase Request Number',
         'Date Issued', 'Status', 'Receiving Office', 'Remarks', 'OR Date', 'OR Received (Original)',
         'Attendance Received Date', 'Received'];
     final data = (_records ?? []).map((r) {
@@ -1118,6 +1122,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         _formatDate(m['date_of_creation']),
         m['purpose']?.toString() ?? '',
         _formatAmount(m['total_amount']),
+        _formatAmount(m['receipt_total_amount']),
         m['purchase_request_number']?.toString() ?? '',
         _formatDate(m['date_issued']),
         m['status']?.toString() ?? '',
@@ -1228,6 +1233,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
       DataColumn(label: Text('Date Created')),
       DataColumn(label: Text('Purpose')),
       DataColumn(label: Text('Total')),
+      DataColumn(label: Text('Total Amount of Receipt')),
       DataColumn(label: Text('PR Number')),
       DataColumn(label: Text('Date Issued')),
       DataColumn(label: Text('Status')),
@@ -1246,6 +1252,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         DataCell(Text(_formatDate(m['date_of_creation']))),
         DataCell(SizedBox(width: 220, child: Text(m['purpose']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatAmount(m['total_amount']))),
+        DataCell(Text(_formatAmount(m['receipt_total_amount']))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),

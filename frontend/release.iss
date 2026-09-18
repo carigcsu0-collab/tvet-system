@@ -3,7 +3,7 @@
 ; running `flutter build windows --release`.
 
 #define MyAppName "TVET Documents"
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.0.4"
 #define MyAppPublisher "TVET"
 #define MyAppExeName "tvet_documents.exe"
 
