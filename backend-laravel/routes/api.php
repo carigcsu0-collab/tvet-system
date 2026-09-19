@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CenterController;
 use App\Http\Controllers\Api\CommunicationPdfController;
 use App\Http\Controllers\Api\CommunicationRecordController;
+use App\Http\Controllers\Api\MealComputationController;
 use App\Http\Controllers\Api\DocumentCodeSettingController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DocumentTypeController;
@@ -103,6 +104,11 @@ Route::middleware('api.auth')->group(function () {
     Route::post('/reimbursements', [ReimbursementController::class, 'store']);
     Route::put('/reimbursements/{reimbursement}', [ReimbursementController::class, 'update']);
     Route::delete('/reimbursements/{reimbursement}', [ReimbursementController::class, 'destroy']);
+
+    Route::get('/meal-computations', [MealComputationController::class, 'index']);
+    Route::post('/meal-computations', [MealComputationController::class, 'store']);
+    Route::put('/meal-computations/{mealComputation}', [MealComputationController::class, 'update']);
+    Route::delete('/meal-computations/{mealComputation}', [MealComputationController::class, 'destroy']);
 
     Route::get('/payment-slips', [PaymentSlipController::class, 'index']);
     Route::post('/payment-slips', [PaymentSlipController::class, 'store']);

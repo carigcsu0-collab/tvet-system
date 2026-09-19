@@ -180,6 +180,11 @@ class AppNavDrawer extends StatelessWidget {
           selectedIcon: Icon(Icons.fact_check),
           label: Text('Training Attendance & Billing'),
         ),
+        const NavigationDrawerDestination(
+          icon: Icon(Icons.restaurant_outlined),
+          selectedIcon: Icon(Icons.restaurant),
+          label: Text('Meals Computation'),
+        ),
 
         const SizedBox(height: 8),
         const Divider(),
