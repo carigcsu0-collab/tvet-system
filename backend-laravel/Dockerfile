@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 # System dependencies + LibreOffice (headless, used to convert the
 # communication-editor's HTML content into a properly formatted PDF).
