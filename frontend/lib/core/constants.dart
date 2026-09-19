@@ -1,6 +1,6 @@
 class AppConstants {
-  static const String apiBaseUrl = 'https://tvet-system.onrender.com/api/v1';
-  static const String apiHost = 'https://tvet-system.onrender.com';
+  static const String apiBaseUrl = 'https://tdmsbackend1-427dseo3.b4a.run/api/v1';
+  static const String apiHost = 'https://tdmsbackend1-427dseo3.b4a.run';
 
   static const String certificateSlug = 'certificate-of-appearance';
   static const String internalSlug = 'internal-communication';
