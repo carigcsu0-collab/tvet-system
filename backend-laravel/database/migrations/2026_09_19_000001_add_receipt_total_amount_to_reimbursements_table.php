@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('reimbursements', function (Blueprint $table) {
-            $table->decimal('receipt_total_amount', 12, 2)->nullable()->after('total_amount');
-        });
+        if (!Schema::hasColumn('reimbursements', 'receipt_total_amount')) {
+            Schema::table('reimbursements', function (Blueprint $table) {
+                $table->decimal('receipt_total_amount', 12, 2)->nullable()->after('total_amount');
+            });
+        }
     }
 
     public function down(): void

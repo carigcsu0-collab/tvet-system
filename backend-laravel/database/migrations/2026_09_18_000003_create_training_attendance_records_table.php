@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('training_attendance_records')) {
+            // Table already exists (e.g. created by an earlier partial run
+            // that was never recorded in the migrations table).
+            return;
+        }
+
         Schema::create('training_attendance_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('training_batch_id')->constrained('training_batches')->cascadeOnDelete();
