@@ -19,10 +19,27 @@ class MealComputation extends Model
         'remarks',
     ];
 
-    protected $appends = ['lunch_total', 'snacks_total', 'grand_total'];
+    protected $appends = [
+        'lunch_total',
+        'snacks_total',
+        'grand_total',
+        'funds_total',
+        'spent_total',
+        'remaining_balance',
+    ];
 
     // NOTE: no 'date' casts — plain Y-m-d strings serialize as-is, avoiding
     // the timezone shift that made dates appear one day behind in the app.
+
+    public function items()
+    {
+        return $this->hasMany(MealItem::class);
+    }
+
+    public function funds()
+    {
+        return $this->hasMany(MealFund::class);
+    }
 
     public function getLunchTotalAttribute(): float
     {
@@ -37,5 +54,22 @@ class MealComputation extends Model
     public function getGrandTotalAttribute(): float
     {
         return $this->lunch_total + $this->snacks_total;
+    }
+
+    public function getFundsTotalAttribute(): float
+    {
+        return (float) $this->funds->sum('amount');
+    }
+
+    public function getSpentTotalAttribute(): float
+    {
+        return (float) $this->items->sum(
+            fn ($item) => (float) $item->quantity * (float) $item->unit_price
+        );
+    }
+
+    public function getRemainingBalanceAttribute(): float
+    {
+        return $this->funds_total - $this->spent_total;
     }
 }

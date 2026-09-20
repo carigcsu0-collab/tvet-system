@@ -107,7 +107,9 @@ Route::middleware('api.auth')->group(function () {
 
     Route::get('/meal-computations', [MealComputationController::class, 'index']);
     Route::post('/meal-computations', [MealComputationController::class, 'store']);
+    Route::get('/meal-computations/{mealComputation}', [MealComputationController::class, 'show']);
     Route::put('/meal-computations/{mealComputation}', [MealComputationController::class, 'update']);
+    Route::put('/meal-computations/{mealComputation}/detail', [MealComputationController::class, 'updateDetail']);
     Route::delete('/meal-computations/{mealComputation}', [MealComputationController::class, 'destroy']);
 
     Route::get('/payment-slips', [PaymentSlipController::class, 'index']);
