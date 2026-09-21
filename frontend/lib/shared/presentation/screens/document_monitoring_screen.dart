@@ -983,9 +983,9 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     return double.tryParse(cleaned);
   }
 
-  /// Sum of the individual receipt amounts, with a count suffix when there
-  /// is more than one (e.g. "₱1,500.00 (3)"). Falls back to the backend's
-  /// computed `receipt_total` if `receipt_amounts` isn't present.
+  /// Shows every individual receipt amount plus the summed total, e.g.
+  /// "₱500.00 + ₱300.00 = ₱800.00". Falls back to the backend's computed
+  /// `receipt_total` if `receipt_amounts` isn't present.
   String _formatReceiptTotal(Map<String, dynamic> m) {
     final amounts = (m['receipt_amounts'] as List<dynamic>?)
         ?.map((a) => (a is num) ? a.toDouble() : double.tryParse(a.toString()) ?? 0)
@@ -997,7 +997,9 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
     }
     final total = amounts.fold<double>(0, (sum, v) => sum + v);
     final formatted = _formatAmount(total);
-    return amounts.length > 1 ? '$formatted (${amounts.length})' : formatted;
+    if (amounts.length <= 1) return formatted;
+    final parts = amounts.map(_formatAmount).join(' + ');
+    return '$parts = $formatted';
   }
 
   Future<void> _showForm({Map<String, dynamic>? record}) async {
@@ -1309,7 +1311,7 @@ class _ReimbursementTabState extends State<_ReimbursementTab>
         DataCell(Text(_formatDate(m['date_of_creation']))),
         DataCell(SizedBox(width: 220, child: Text(m['purpose']?.toString() ?? '', softWrap: true))),
         DataCell(Text(_formatAmount(m['total_amount']))),
-        DataCell(Text(_formatReceiptTotal(m))),
+        DataCell(SizedBox(width: 220, child: Text(_formatReceiptTotal(m), softWrap: true))),
         DataCell(Text(m['purchase_request_number']?.toString() ?? '')),
         DataCell(Text(_formatDate(m['date_issued']))),
         DataCell(_statusBadge(m['status']?.toString() ?? '')),
