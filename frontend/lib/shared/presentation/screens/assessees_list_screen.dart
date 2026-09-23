@@ -87,7 +87,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
   final _search = TextEditingController();
   int? _selectedCenterId;
   String? _selectedQualification;
-  String? _selectedDate;
+  final Set<String> _selectedDates = {};
   String? _selectedCompetency;
   String? _selectedAssessor;
   String? _selectedPaid; // 'Paid', 'Unpaid', or null
@@ -218,10 +218,10 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               (a) => a['qualification']?.toString() == _selectedQualification)
           .toList();
     }
-    if (_selectedDate != null) {
+    if (_selectedDates.isNotEmpty) {
       list = list.where((a) {
         final d = _normalizeDate(a['assessment_date']);
-        return d == _selectedDate;
+        return _selectedDates.contains(d);
       }).toList();
     }
     if (_selectedCompetency != null) {
@@ -251,6 +251,65 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       _assessees = list;
       _selected.clear();
     });
+  }
+
+  /// Multi-select date filter: opens a dialog with a checkbox per distinct
+  /// assessment date so several dates can be shown at once.
+  Future<void> _showDateFilter(List<String> availableDates) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Filter by Assessment Date'),
+          content: SizedBox(
+            width: 320,
+            child: availableDates.isEmpty
+                ? const Text('No dates available')
+                : SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: availableDates.map((d) {
+                        final parsed = _parseDate(d);
+                        final label =
+                            parsed != null ? _displayFormat.format(parsed) : d;
+                        final checked = _selectedDates.contains(d);
+                        return CheckboxListTile(
+                          dense: true,
+                          title: Text(label),
+                          value: checked,
+                          onChanged: (v) {
+                            setDialogState(() {
+                              if (v == true) {
+                                _selectedDates.add(d);
+                              } else {
+                                _selectedDates.remove(d);
+                              }
+                            });
+                            setState(() {});
+                            _applyFilters();
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setDialogState(() => _selectedDates.clear());
+                setState(() {});
+                _applyFilters();
+              },
+              child: const Text('Clear'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String get _title => widget.type == 'assessment' ? 'Assessees' : 'Trainees';
@@ -1854,17 +1913,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         .toSet()
         .toList()
       ..sort();
-    final dateItems = <DropdownMenuItem<String?>>[
-      const DropdownMenuItem(value: null, child: Text('All dates')),
-      ...availableDates.map((d) {
-        final parsed = _parseDate(d);
-        final label = parsed != null ? _displayFormat.format(parsed) : d;
-        return DropdownMenuItem<String?>(
-          value: d,
-          child: Text(label, overflow: TextOverflow.ellipsis),
-        );
-      }),
-    ];
+    final dateItems = <String>[...availableDates];
 
     final availableAssessors = all
         .map((a) => a['assessor']?.toString() ?? '')
@@ -1897,7 +1946,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     final totalCount = all.length;
     final filteredCount = list.length;
     final hasActiveFilters = _selectedQualification != null ||
-        _selectedDate != null ||
+        _selectedDates.isNotEmpty ||
         _selectedCompetency != null ||
         _selectedAssessor != null ||
         _selectedPaid != null ||
@@ -1945,19 +1994,15 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               ),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 180),
-                child: DropdownButtonFormField<String?>(
-                  initialValue: _selectedDate,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.event, size: 16),
+                  label: Text(
+                    _selectedDates.isEmpty
+                        ? 'All dates'
+                        : 'Dates (${_selectedDates.length})',
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  items: dateItems,
-                  onChanged: (v) {
-                    setState(() => _selectedDate = v);
-                    _applyFilters();
-                  },
+                  onPressed: () => _showDateFilter(dateItems),
                 ),
               ),
               ConstrainedBox(
@@ -2157,7 +2202,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                             setState(() {
                               _selectedQualification = null;
                               _selectedCenterId = null;
-                              _selectedDate = null;
+                              _selectedDates.clear();
                               _selectedCompetency = null;
                               _selectedAssessor = null;
                               _selectedPaid = null;

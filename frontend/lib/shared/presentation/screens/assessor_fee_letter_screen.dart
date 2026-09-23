@@ -35,7 +35,6 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
   bool _generating = false;
 
   static final DateFormat _displayFormat = DateFormat('MMMM dd, yyyy');
-  static final DateFormat _storeFormat = DateFormat('yyyy-MM-dd');
 
   @override
   void initState() {
@@ -109,12 +108,6 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
     });
   }
 
-  String _displayToStore(String display) {
-    final dt = _displayFormat.tryParse(display.trim());
-    if (dt != null) return _storeFormat.format(dt);
-    return display.trim();
-  }
-
   String _dateRangeLabel() {
     final fromStr = _assessmentDateFromController.text.trim();
     final toStr = _assessmentDateToController.text.trim();
@@ -143,24 +136,13 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
   }
 
   Future<void> _generateTable() async {
-    final fromDate = _displayToStore(_assessmentDateFromController.text);
-    final toDate = _displayToStore(_assessmentDateToController.text);
     final feePerAssessee =
         double.tryParse(_feePerAssesseeController.text) ?? 0.0;
 
-    if (fromDate.isEmpty && toDate.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one date')),
-      );
-      return;
-    }
-
     setState(() => _generating = true);
     try {
-      var url = '/assessees?';
-      if (fromDate.isNotEmpty) url += 'assessment_date_from=$fromDate&';
-      if (toDate.isNotEmpty) url += 'assessment_date_to=$toDate&';
-      final res = await ApiClient.get(url);
+      // Total assessee count — not filtered by assessment date.
+      final res = await ApiClient.get('/assessees?type=assessment');
       final assessees =
           (res.data as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
       final groups = <String, Map<String, dynamic>>{};
@@ -301,7 +283,7 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                             onTap: () =>
                                 _pickDate(_assessmentDateFromController),
                             decoration: InputDecoration(
-                              labelText: 'Assessment Date From',
+                              labelText: 'Assessment Date From (optional)',
                               isDense: true,
                               prefixIcon: const Icon(Icons.event, size: 18),
                               suffixIcon: IconButton(
@@ -320,7 +302,7 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                             onTap: () =>
                                 _pickDate(_assessmentDateToController),
                             decoration: InputDecoration(
-                              labelText: 'Assessment Date To',
+                              labelText: 'Assessment Date To (optional)',
                               isDense: true,
                               prefixIcon: const Icon(Icons.event, size: 18),
                               suffixIcon: IconButton(
@@ -535,7 +517,7 @@ class _AssessorFeeLetterScreenState extends State<AssessorFeeLetterScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: AppTheme.spaceSm),
                         child: Text(
-                          'Select an assessment date and press Generate to populate the table.',
+                          'Press Generate to populate the table with all assessees.',
                           style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                         ),
                       ),
