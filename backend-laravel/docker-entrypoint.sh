@@ -12,8 +12,8 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 php artisan config:cache --no-ansi 2>/dev/null || true
 php artisan route:cache --no-ansi 2>/dev/null || true
 
-# Run migrations (safe on startup, will fail only if DB is unreachable)
-php artisan migrate --force --no-ansi 2>/dev/null || true
+# Run migrations and fail startup visibly if the database cannot be migrated.
+php artisan migrate --force --no-ansi
 
 # Some platforms (Back4App Containers, etc.) inject a PORT env var that the
 # app must listen on. Render also sets PORT — binding to it works there too.

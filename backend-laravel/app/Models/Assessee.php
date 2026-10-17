@@ -15,6 +15,8 @@ class Assessee extends Model
     protected $fillable = [
         'assessment_center_id',
         'training_batch_id',
+        'assessment_candidate_type',
+        'training_candidate_type',
         'name',
         'last_name',
         'first_name',

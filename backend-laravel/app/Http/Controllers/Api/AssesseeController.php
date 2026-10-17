@@ -43,6 +43,8 @@ class AssesseeController extends Controller
     {
         $validated = $request->validate([
             'assessment_center_id' => ['required', 'integer', 'exists:centers,id'],
+            'assessment_candidate_type' => ['nullable', 'in:internal,external_walk_in,external_scholar'],
+            'training_candidate_type' => ['nullable', 'in:walk_in,scholar'],
             'last_name' => ['required', 'string', 'max:255'],
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
@@ -130,6 +132,8 @@ class AssesseeController extends Controller
     {
         $validated = $request->validate([
             'assessment_center_id' => ['required', 'integer', 'exists:centers,id'],
+            'assessment_candidate_type' => ['nullable', 'in:internal,external_walk_in,external_scholar'],
+            'training_candidate_type' => ['nullable', 'in:walk_in,scholar'],
             'last_name' => ['required', 'string', 'max:255'],
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],

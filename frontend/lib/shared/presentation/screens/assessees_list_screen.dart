@@ -465,6 +465,24 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
   /// Builds the headers and rows shared by the print and export functions.
   /// The Paid/Unpaid status is taken verbatim from the system records so an
+  String _candidateTypeLabel(Map<String, dynamic> assessee) {
+    final candidateType = (widget.type == 'assessment'
+            ? assessee['assessment_candidate_type']
+            : assessee['training_candidate_type'])
+        ?.toString();
+    final labels = widget.type == 'assessment'
+        ? const {
+            'internal': 'Internal',
+            'external_walk_in': 'External - Walk-in',
+            'external_scholar': 'External - Scholar',
+          }
+        : const {
+            'walk_in': 'Walk-in',
+            'scholar': 'Scholar',
+          };
+    return labels[candidateType] ?? '';
+  }
+
   /// unpaid assessee is never reported as paid in any exported file.
   (List<String>, List<List<String>>) _buildExportData() {
     if (_assessees == null || _assessees!.isEmpty) {
@@ -479,6 +497,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         ? [
             'Name',
             'Qualification',
+            'Category',
             'Competency',
             'Ref No.',
             'ULI',
@@ -490,6 +509,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
           ]
         : [
             'Name',
+            'Category',
             'Qualification',
             'Ref No.',
             'ULI',
@@ -509,6 +529,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         return [
           m['name']?.toString() ?? '',
           m['qualification']?.toString() ?? '',
+          _candidateTypeLabel(m),
           m['competency']?.toString() ?? '',
           m['reference_number']?.toString() ?? '',
           m['uli']?.toString() ?? '',
@@ -521,6 +542,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       }
       return [
         m['name']?.toString() ?? '',
+        _candidateTypeLabel(m),
         m['qualification']?.toString() ?? '',
         m['reference_number']?.toString() ?? '',
         m['uli']?.toString() ?? '',
@@ -1284,6 +1306,13 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
     int? selectedCenterId = assessee?['assessment_center_id'] as int?;
     bool assessmentFeePaid = assessee?['assessment_fee_paid'] == true;
+    String? selectedCandidateType;
+    if (assessee != null) {
+      selectedCandidateType = (widget.type == 'assessment'
+              ? assessee['assessment_candidate_type']
+              : assessee['training_candidate_type'])
+          ?.toString();
+    }
     bool processingFeePaid = assessee?['processing_fee_paid'] == true;
     bool registrationForm = assessee?['registration_form'] == true;
     bool medicalCertificate = assessee?['medical_certificate'] == true;
@@ -1438,6 +1467,35 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   TextFormField(
                     controller: age,
                     keyboardType: TextInputType.number,
+                  DropdownButtonFormField<String?>(
+                    initialValue: selectedCandidateType,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: widget.type == 'assessment'
+                          ? 'Assessee Category'
+                          : 'Trainee Category',
+                    ),
+                    items: (widget.type == 'assessment'
+                            ? const {
+                                'internal': 'Internal',
+                                'external_walk_in': 'External - Walk-in',
+                                'external_scholar': 'External - Scholar',
+                              }
+                            : const {
+                                'walk_in': 'Walk-in',
+                                'scholar': 'Scholar',
+                              })
+                        .entries
+                        .map((entry) => DropdownMenuItem<String?>(
+                              value: entry.key,
+                              child: Text(entry.value),
+                            ))
+                        .toList(),
+                    validator: (value) => value == null ? 'Required' : null,
+                    onChanged: (value) =>
+                        setDialogState(() => selectedCandidateType = value),
+                  ),
+                  const SizedBox(height: 8),
                     decoration: const InputDecoration(labelText: 'Age'),
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Required' : null,
@@ -1629,6 +1687,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   'middle_name': middleName.text.trim(),
                   'extension_name': extensionName.text.trim(),
                   'birthday': birthday.text.trim(),
+                    'assessment_candidate_type': selectedCandidateType,
                   'age': int.tryParse(age.text) ?? 0,
                   'qualification': qualification.text.trim(),
                 };
@@ -1649,6 +1708,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     'registration_form': false,
                     'medical_certificate': false,
                     'brgy_indigency': false,
+                    'training_candidate_type': selectedCandidateType,
                     'brgy_clearance': false,
                     'tor_form137_138': false,
                   });
@@ -1761,6 +1821,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       return ErrorState(message: _error!, onRetry: _load);
     }
     final columns = widget.type == 'assessment'
+            DataColumn(label: Text('Category')),
         ? const [
             DataColumn(label: Text('Name')),
             DataColumn(label: Text('Birthday')),
@@ -1775,6 +1836,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             DataColumn(label: Text('Assessor')),
             DataColumn(label: Text('Date of Assessment')),
             DataColumn(label: Text('Actions')),
+            DataColumn(label: Text('Category')),
           ]
         : const [
             DataColumn(label: Text('Name')),
@@ -1810,6 +1872,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               }
             });
           },
+            DataCell(Text(_candidateTypeLabel(m))),
           cells: [
             DataCell(SelectableText(m['name']?.toString() ?? '')),
             DataCell(SelectableText(_formatDate(m['birthday']))),
@@ -1854,6 +1917,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               _selected.remove(index);
             }
           });
+          DataCell(Text(_candidateTypeLabel(m))),
         },
         cells: [
           DataCell(Text(m['name']?.toString() ?? '')),
