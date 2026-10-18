@@ -27,7 +27,6 @@ class _CertificateOfAppearanceScreenState
   final _monthYearController = TextEditingController();
   final _issuedAtController = TextEditingController();
   final _coordinatorController = TextEditingController();
-  final _codeController = TextEditingController();
   List<dynamic>? _users;
   String? _selectedUserId;
   List<String> _selectedDesignations = [];
@@ -57,7 +56,6 @@ class _CertificateOfAppearanceScreenState
           (results[2].data['value'] as String?) ?? '';
       _issuedAtController.text =
           (results[3].data['value'] as String?) ?? '';
-      _codeController.text = (results[0].data['code'] as String?) ?? '';
       final coordName = results[4].data['value'] as String?;
       final coordTitle = results[5].data['value'] as String?;
       if (coordName != null && coordName.isNotEmpty) {
@@ -162,7 +160,6 @@ class _CertificateOfAppearanceScreenState
     _monthYearController.dispose();
     _issuedAtController.dispose();
     _coordinatorController.dispose();
-    _codeController.dispose();
     super.dispose();
   }
 
@@ -264,23 +261,6 @@ class _CertificateOfAppearanceScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextFormField(
-                            controller: _codeController,
-                            readOnly: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Document Code',
-                              isDense: true,
-                              prefixIcon: Icon(Icons.tag, size: 18),
-                            ),
-                            style: const TextStyle(
-                              color: AppTheme.success,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                            validator: (v) =>
-                                v == null || v.trim().isEmpty ? 'Required' : null,
-                          ),
-                          const SizedBox(height: AppTheme.spaceSm),
                           const UniversityLetterhead(showDivider: false),
                           const SizedBox(height: AppTheme.spaceLg),
                           const Center(

@@ -104,9 +104,17 @@ class AssesseeController extends Controller
             'ids.*' => ['integer', 'exists:assessee_trainees,id'],
             'assessor' => ['nullable', 'string', 'max:255'],
             'assessment_date' => ['nullable', 'string', 'max:255'],
+            'competency' => ['nullable', 'string', 'in:Pending,Competent,Not Yet Competent,Absent'],
+            'assessment_candidate_type' => ['nullable', 'in:internal,external_walk_in,external_scholar'],
+            'training_candidate_type' => ['nullable', 'in:walk_in,scholar'],
         ]);
 
         $update = [];
+        foreach (['competency', 'assessment_candidate_type', 'training_candidate_type'] as $field) {
+            if (!empty($validated[$field])) {
+                $update[$field] = $validated[$field];
+            }
+        }
         if (array_key_exists('assessor', $validated)) {
             $update['assessor'] = $validated['assessor'];
         }

@@ -15,6 +15,8 @@ class AttendancePrintScreen extends StatefulWidget {
   final String dateOfAssessment;
   final String qualification;
   final String acManagerName;
+  final bool includePei;
+  final bool includeRap;
 
   const AttendancePrintScreen({
     super.key,
@@ -25,6 +27,8 @@ class AttendancePrintScreen extends StatefulWidget {
     this.dateOfAssessment = '',
     this.qualification = '',
     this.acManagerName = '',
+    this.includePei = true,
+    this.includeRap = true,
   });
 
   @override
@@ -43,12 +47,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
 
       // Load Arial fonts for PDF
-      final arialRegular = pw.Font.ttf(
-          (await rootBundle.load('assets/fonts/arial.ttf')));
-      final arialBold = pw.Font.ttf(
-          (await rootBundle.load('assets/fonts/arialbd.ttf')));
-      final checkmarkFont = pw.Font.ttf(
-          (await rootBundle.load('assets/fonts/checkmark.ttf')));
+      final arialRegular =
+          pw.Font.ttf((await rootBundle.load('assets/fonts/arial.ttf')));
+      final arialBold =
+          pw.Font.ttf((await rootBundle.load('assets/fonts/arialbd.ttf')));
+      final checkmarkFont =
+          pw.Font.ttf((await rootBundle.load('assets/fonts/checkmark.ttf')));
 
       final centerName = widget.center['name']?.toString() ?? '';
       final qualification = widget.qualification.isNotEmpty
@@ -57,8 +61,7 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
               .join(', ')
               .toUpperCase();
 
-      final sorted =
-          List<Map<String, dynamic>>.from(widget.selectedAssessees);
+      final sorted = List<Map<String, dynamic>>.from(widget.selectedAssessees);
       sorted.sort((a, b) {
         final refA = a['reference_number']?.toString() ?? '';
         final refB = b['reference_number']?.toString() ?? '';
@@ -67,8 +70,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
 
       final pages = <List<Map<String, dynamic>>>[];
       for (var i = 0; i < sorted.length; i += 10) {
-        pages.add(sorted.sublist(
-            i, i + 10 > sorted.length ? sorted.length : i + 10));
+        pages.add(
+            sorted.sublist(i, i + 10 > sorted.length ? sorted.length : i + 10));
       }
       if (pages.isEmpty) pages.add([]);
 
@@ -94,38 +97,42 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
         }
       }
 
-      // 2 copies of PEI (Page 1 / F29 only)
-      for (int copy = 0; copy < 2; copy++) {
+      // 2 copies of PEI (Page 1 / F29 only) when selected
+      if (widget.includePei) {
+        for (int copy = 0; copy < 2; copy++) {
+          pdf.addPage(
+            pw.Page(
+              pageFormat: PdfPageFormat.a4,
+              margin: const pw.EdgeInsets.all(0),
+              build: (context) => _buildPeiPdfPage(
+                'TESDA-OP-CO-04-F29',
+                'Rev. No.00-05/04/23',
+                '(To be accomplished by Candidates)',
+                qualification,
+                arialRegular,
+                arialBold,
+                checkmarkFont,
+              ),
+            ),
+          );
+        }
+      }
+
+      // 1 copy of RAP when selected
+      if (widget.includeRap) {
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
             margin: const pw.EdgeInsets.all(0),
-            build: (context) => _buildPeiPdfPage(
-              'TESDA-OP-CO-04-F29',
-              'Rev. No.00-05/04/23',
-              '(To be accomplished by Candidates)',
+            build: (context) => _buildRapPdfPage(
+              centerName,
               qualification,
               arialRegular,
               arialBold,
-              checkmarkFont,
             ),
           ),
         );
       }
-
-      // 1 copy of RAP
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(0),
-          build: (context) => _buildRapPdfPage(
-            centerName,
-            qualification,
-            arialRegular,
-            arialBold,
-          ),
-        ),
-      );
 
       await Printing.layoutPdf(
         onLayout: (format) async => pdf.save(),
@@ -145,8 +152,11 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     final last = a['last_name']?.toString() ?? '';
     final first = a['first_name']?.toString() ?? '';
     final middle = a['middle_name']?.toString() ?? '';
+    final ext = a['extension_name']?.toString() ?? '';
+    final lastWithExt = ext.isNotEmpty ? '$last $ext' : last;
     if (first.isNotEmpty || last.isNotEmpty) {
-      final parts = [first, middle, last].where((p) => p.isNotEmpty).join(' ');
+      final parts =
+          [first, middle, lastWithExt].where((p) => p.isNotEmpty).join(' ');
       return parts.toUpperCase();
     }
     return (a['name']?.toString() ?? '').toUpperCase();
@@ -175,9 +185,11 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
               crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 pw.Text('TESDA-OP-CO-05-F31',
-                    style: pw.TextStyle(font: arial, fontSize: 8, color: black)),
+                    style:
+                        pw.TextStyle(font: arial, fontSize: 8, color: black)),
                 pw.Text('Rev. No. 00-03/08/17',
-                    style: pw.TextStyle(font: arial, fontSize: 8, color: black)),
+                    style:
+                        pw.TextStyle(font: arial, fontSize: 8, color: black)),
               ],
             ),
           ),
@@ -235,8 +247,7 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                   pw.Padding(
                     padding: const pw.EdgeInsets.symmetric(
                         horizontal: 6, vertical: 4),
-                    child: pw.Text(
-                        'Name of Competency Assessment Center:',
+                    child: pw.Text('Name of Competency Assessment Center:',
                         style: pw.TextStyle(
                             font: arial, fontSize: 9, color: black)),
                   ),
@@ -285,15 +296,15 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     pw.Font arial,
     pw.Font arialBold,
   ) {
-    final rowCount = assessees.length > 10 ? assessees.length : 10;
+    final rowCount = assessees.length;
     return pw.Table(
       border: pw.TableBorder.all(color: black, width: 0.375),
       columnWidths: {
         0: const pw.FixedColumnWidth(25),
         1: const pw.FlexColumnWidth(3.0),
         2: const pw.FlexColumnWidth(1.8),
-        3: const pw.FlexColumnWidth(1.5),
-        4: const pw.FlexColumnWidth(1.5),
+        3: const pw.FlexColumnWidth(2.2),
+        4: const pw.FlexColumnWidth(1.3),
       },
       children: [
         // Header
@@ -313,27 +324,28 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
               _pdfBodyCell('${i + 1}.', black, arial),
               _pdfBodyCell(
                   i < assessees.length ? _formatNamePdf(assessees[i]) : '',
-                  black, arial),
+                  black,
+                  arial),
               _pdfBodyCell(
                   i < assessees.length
                       ? assessees[i]['reference_number']?.toString() ?? ''
                       : '',
-                  black, arial),
+                  black,
+                  arial),
               _pdfBodyCell('', black, arial),
               _pdfBodyCell('', black, arial),
             ],
           ),
-        ],
-      );
+      ],
+    );
   }
 
   pw.Widget _pdfHeaderCell(String text, PdfColor black, pw.Font arialBold) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       child: pw.Text(
         text,
-        style: pw.TextStyle(
-            font: arialBold, fontSize: 9, color: black),
+        style: pw.TextStyle(font: arialBold, fontSize: 9, color: black),
         textAlign: pw.TextAlign.center,
       ),
     );
@@ -341,7 +353,7 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
 
   pw.Widget _pdfBodyCell(String text, PdfColor black, pw.Font arial) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: pw.Text(
         text,
         style: pw.TextStyle(font: arial, fontSize: 8, color: black),
@@ -349,7 +361,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     );
   }
 
-  pw.Widget _buildPdfSignatureSection(PdfColor black, pw.Font arial, pw.Font arialBold) {
+  pw.Widget _buildPdfSignatureSection(
+      PdfColor black, pw.Font arial, pw.Font arialBold) {
     pw.Widget sigBox({
       required String title,
       required String name,
@@ -364,10 +377,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
             // Title - upper left
             if (title.isNotEmpty)
               pw.Text(title,
-                  style: pw.TextStyle(
-                      font: arialBold,
-                      fontSize: 8,
-                      color: black),
+                  style:
+                      pw.TextStyle(font: arialBold, fontSize: 8, color: black),
                   textAlign: pw.TextAlign.left),
             pw.SizedBox(height: 20),
             // Name with underline - centered
@@ -375,7 +386,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
               child: pw.Column(
                 children: [
                   pw.Text(name.toUpperCase(),
-                      style: pw.TextStyle(font: arial, fontSize: 8, color: black),
+                      style: pw.TextStyle(
+                          font: arialBold, fontSize: 8, color: black),
                       textAlign: pw.TextAlign.center),
                   pw.Container(height: 1, color: black),
                 ],
@@ -396,9 +408,7 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                 children: [
                   pw.Text('Accreditation Number:',
                       style: pw.TextStyle(
-                          font: arialBold,
-                          fontSize: 8,
-                          color: black)),
+                          font: arialBold, fontSize: 8, color: black)),
                   pw.SizedBox(width: 4),
                   pw.Expanded(
                     child: pw.Column(
@@ -421,44 +431,44 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
 
     // Use Table for the 2x2 grid to avoid IntrinsicHeight
     return pw.Table(
-        border: pw.TableBorder.all(color: black, width: 0.375),
-        columnWidths: {
-          0: const pw.FlexColumnWidth(),
-          1: const pw.FlexColumnWidth(),
-        },
-        children: [
-          // Upper row: Assessor | TESDA Representative
-          pw.TableRow(
-            children: [
-              sigBox(
-                title: 'Assessors:',
-                name: widget.assessorName,
-                showAccreditation: true,
-                accreditationNumber: widget.assessorAccreditationNumber,
-              ),
-              sigBox(
-                title: 'TESDA Representative:',
-                name: '',
-                showAccreditation: false,
-              ),
-            ],
-          ),
-          // Lower row: Blank | AC Manager
-          pw.TableRow(
-            children: [
-              sigBox(
-                title: '',
-                name: '',
-                showAccreditation: true,
-              ),
-              sigBox(
-                title: 'AC Manager:',
-                name: widget.acManagerName,
-                showAccreditation: false,
-              ),
-            ],
-          ),
-        ],
+      border: pw.TableBorder.all(color: black, width: 0.375),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(),
+        1: const pw.FlexColumnWidth(),
+      },
+      children: [
+        // Upper row: Assessor | TESDA Representative
+        pw.TableRow(
+          children: [
+            sigBox(
+              title: 'Assessors:',
+              name: widget.assessorName,
+              showAccreditation: true,
+              accreditationNumber: widget.assessorAccreditationNumber,
+            ),
+            sigBox(
+              title: 'TESDA Representative:',
+              name: '',
+              showAccreditation: false,
+            ),
+          ],
+        ),
+        // Lower row: Blank | AC Manager
+        pw.TableRow(
+          children: [
+            sigBox(
+              title: '',
+              name: '',
+              showAccreditation: true,
+            ),
+            sigBox(
+              title: 'AC Manager:',
+              name: widget.acManagerName,
+              showAccreditation: false,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -536,7 +546,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text(formCode,
-                style: pw.TextStyle(font: arialBold, fontSize: 12, color: black)),
+                style:
+                    pw.TextStyle(font: arialBold, fontSize: 12, color: black)),
           ),
           pw.Align(
             alignment: pw.Alignment.centerRight,
@@ -569,7 +580,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           ),
           pw.SizedBox(height: 8),
           // FOR TESDA USE ONLY table
-          _buildPeiTesdaTable(black, headerBg, arial, arialBold, cell, checkmarkFont),
+          _buildPeiTesdaTable(
+              black, headerBg, arial, arialBold, cell, checkmarkFont),
           pw.SizedBox(height: 6),
           // Footnote
           pw.Text(
@@ -585,7 +597,13 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
 
   pw.Widget _buildPeiMainTable(
     List<String> items,
-    pw.Widget Function(String, {bool bold, bool center, PdfColor bg, double fontSize, List<pw.Font> fontFallback}) cell,
+    pw.Widget Function(String,
+            {bool bold,
+            bool center,
+            PdfColor bg,
+            double fontSize,
+            List<pw.Font> fontFallback})
+        cell,
     pw.Widget Function() emptyCell,
     PdfColor black,
     PdfColor headerBg,
@@ -636,14 +654,16 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: labelW,
         height: h0,
-        decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+        decoration: pw.BoxDecoration(
+            color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
         child: cell("Assessor’s Name", bold: true, fontSize: 12),
       ),
       pw.Container(
         width: valueW,
         height: h0,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
-        child: cell(' ${widget.assessorName}', fontSize: 10),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        child: cell(' ${widget.assessorName.toUpperCase()}', fontSize: 10),
       ),
     ]);
 
@@ -652,13 +672,15 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: labelW,
         height: h1,
-        decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+        decoration: pw.BoxDecoration(
+            color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
         child: cell('Qualification', bold: true, fontSize: 12),
       ),
       pw.Container(
         width: valueW,
         height: h1,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: cell(' ${widget.qualification}', fontSize: 10),
       ),
     ]);
@@ -668,25 +690,29 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: labelW,
         height: h2,
-        decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+        decoration: pw.BoxDecoration(
+            color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
         child: cell('Name of Respondent', fontSize: 10),
       ),
       pw.Container(
         width: respValW,
         height: h2,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: cell(' ', fontSize: 10),
       ),
       pw.Container(
         width: dateLblW,
         height: h2,
-        decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+        decoration: pw.BoxDecoration(
+            color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
         child: cell('Date Accomplished', fontSize: 10),
       ),
       pw.Container(
         width: dateValW,
         height: h2,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: cell(' ', fontSize: 10),
       ),
     ]);
@@ -696,15 +722,25 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: mainW,
         height: h3,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: pw.Padding(
           padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
           child: pw.RichText(
             text: pw.TextSpan(
               children: [
-                pw.TextSpan(text: 'INSTRUCTIONS: Put a tick (', style: pw.TextStyle(font: arialBold, fontSize: 10, color: black)),
-                pw.TextSpan(text: '\u2713', style: pw.TextStyle(font: checkmarkFont, fontSize: 10, color: black)),
-                pw.TextSpan(text: ') mark in the appropriate column', style: pw.TextStyle(font: arialBold, fontSize: 10, color: black)),
+                pw.TextSpan(
+                    text: 'INSTRUCTIONS: Put a tick (',
+                    style: pw.TextStyle(
+                        font: arialBold, fontSize: 10, color: black)),
+                pw.TextSpan(
+                    text: '\u2713',
+                    style: pw.TextStyle(
+                        font: checkmarkFont, fontSize: 10, color: black)),
+                pw.TextSpan(
+                    text: ') mark in the appropriate column',
+                    style: pw.TextStyle(
+                        font: arialBold, fontSize: 10, color: black)),
               ],
             ),
           ),
@@ -717,21 +753,25 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: scaleLblW,
         height: h4,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: cell('SCALE GUIDE', fontSize: 10),
       ),
       pw.Container(
         width: scale1W,
         height: h4,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: pw.Padding(
           padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             mainAxisAlignment: pw.MainAxisAlignment.center,
             children: [
-              pw.Text('5\u2013 Very Satisfactory', style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
-              pw.Text('4 \u2013 Satisfactory', style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+              pw.Text('5\u2013 Very Satisfactory',
+                  style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+              pw.Text('4 \u2013 Satisfactory',
+                  style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
             ],
           ),
         ),
@@ -739,15 +779,18 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: scale2W,
         height: h4,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: pw.Padding(
           padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             mainAxisAlignment: pw.MainAxisAlignment.center,
             children: [
-              pw.Text('3 \u2013 Good', style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
-              pw.Text('2 \u2013 Fair', style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+              pw.Text('3 \u2013 Good',
+                  style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+              pw.Text('2 \u2013 Fair',
+                  style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
             ],
           ),
         ),
@@ -755,13 +798,15 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: scale3W,
         height: h4,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: emptyCell(),
       ),
       pw.Container(
         width: scale4W,
         height: h4,
-        decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+        decoration:
+            pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
         child: cell('1 – Poor', fontSize: 10),
       ),
     ]);
@@ -771,25 +816,57 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       pw.Container(
         width: itemW,
         height: h5,
-        decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+        decoration: pw.BoxDecoration(
+            color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
         child: cell('ITEM', bold: true, center: true, fontSize: 12),
       ),
       pw.Container(
         width: ratingW,
         height: h5,
-        decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+        decoration: pw.BoxDecoration(
+            color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
         child: cell('RATING', bold: true, center: true, fontSize: 12),
       ),
     ]);
 
     // R6: empty | 5 4 3 2 1
     rows.add([
-      pw.Container(width: itemW, height: h6, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-      pw.Container(width: rate5W, height: h6, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell('5', center: true, fontSize: 12)),
-      pw.Container(width: rateW, height: h6, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell('4', center: true, fontSize: 12)),
-      pw.Container(width: rateW, height: h6, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell('3', center: true, fontSize: 12)),
-      pw.Container(width: rateW, height: h6, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell('2', center: true, fontSize: 12)),
-      pw.Container(width: rate1W, height: h6, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell('1', center: true, fontSize: 12)),
+      pw.Container(
+          width: itemW,
+          height: h6,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
+      pw.Container(
+          width: rate5W,
+          height: h6,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('5', center: true, fontSize: 12)),
+      pw.Container(
+          width: rateW,
+          height: h6,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('4', center: true, fontSize: 12)),
+      pw.Container(
+          width: rateW,
+          height: h6,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('3', center: true, fontSize: 12)),
+      pw.Container(
+          width: rateW,
+          height: h6,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('2', center: true, fontSize: 12)),
+      pw.Container(
+          width: rate1W,
+          height: h6,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('1', center: true, fontSize: 12)),
     ]);
 
     // Item rows
@@ -797,35 +874,115 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       final item = items[i];
       final itemHeight = i < itemHeights.length ? itemHeights[i] : 35.0;
       rows.add([
-        pw.Container(width: itemW, height: itemHeight, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell(item, fontSize: 10)),
-        pw.Container(width: rate5W, height: itemHeight, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-        pw.Container(width: rateW, height: itemHeight, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-        pw.Container(width: rateW, height: itemHeight, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-        pw.Container(width: rateW, height: itemHeight, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-        pw.Container(width: rate1W, height: itemHeight, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
+        pw.Container(
+            width: itemW,
+            height: itemHeight,
+            decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: black, width: 0.5)),
+            child: cell(item, fontSize: 10)),
+        pw.Container(
+            width: rate5W,
+            height: itemHeight,
+            decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: black, width: 0.5)),
+            child: emptyCell()),
+        pw.Container(
+            width: rateW,
+            height: itemHeight,
+            decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: black, width: 0.5)),
+            child: emptyCell()),
+        pw.Container(
+            width: rateW,
+            height: itemHeight,
+            decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: black, width: 0.5)),
+            child: emptyCell()),
+        pw.Container(
+            width: rateW,
+            height: itemHeight,
+            decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: black, width: 0.5)),
+            child: emptyCell()),
+        pw.Container(
+            width: rate1W,
+            height: itemHeight,
+            decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: black, width: 0.5)),
+            child: emptyCell()),
       ]);
     }
 
     // Sub-score
     rows.add([
-      pw.Container(width: itemW, height: hSub, decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)), child: cell('Sub - score', center: true, fontSize: 10)),
-      pw.Container(width: rate5W, height: hSub, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-      pw.Container(width: rateW, height: hSub, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-      pw.Container(width: rateW, height: hSub, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-      pw.Container(width: rateW, height: hSub, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
-      pw.Container(width: rate1W, height: hSub, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
+      pw.Container(
+          width: itemW,
+          height: hSub,
+          decoration: pw.BoxDecoration(
+              color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('Sub - score', center: true, fontSize: 10)),
+      pw.Container(
+          width: rate5W,
+          height: hSub,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
+      pw.Container(
+          width: rateW,
+          height: hSub,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
+      pw.Container(
+          width: rateW,
+          height: hSub,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
+      pw.Container(
+          width: rateW,
+          height: hSub,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
+      pw.Container(
+          width: rate1W,
+          height: hSub,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
     ]);
 
     // FINAL RATING
     rows.add([
-      pw.Container(width: finalLblW, height: hFinal, decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)), child: cell('FINAL RATING', bold: true, fontSize: 10)),
-      pw.Container(width: finalValW, height: hFinal, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: cell(' ', bold: true, center: true, fontSize: 10)),
+      pw.Container(
+          width: finalLblW,
+          height: hFinal,
+          decoration: pw.BoxDecoration(
+              color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('FINAL RATING', bold: true, fontSize: 10)),
+      pw.Container(
+          width: finalValW,
+          height: hFinal,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: cell(' ', bold: true, center: true, fontSize: 10)),
     ]);
 
     // Signature of Respondent
     rows.add([
-      pw.Container(width: finalLblW, height: hSig, decoration: pw.BoxDecoration(color: headerBg, border: pw.Border.all(color: black, width: 0.5)), child: cell('Signature of Respondent', bold: true, fontSize: 10)),
-      pw.Container(width: finalValW, height: hSig, decoration: pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)), child: emptyCell()),
+      pw.Container(
+          width: finalLblW,
+          height: hSig,
+          decoration: pw.BoxDecoration(
+              color: headerBg, border: pw.Border.all(color: black, width: 0.5)),
+          child: cell('Signature of Respondent', bold: true, fontSize: 10)),
+      pw.Container(
+          width: finalValW,
+          height: hSig,
+          decoration:
+              pw.BoxDecoration(border: pw.Border.all(color: black, width: 0.5)),
+          child: emptyCell()),
     ]);
 
     return pw.Column(
@@ -839,7 +996,13 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     PdfColor headerBg,
     pw.Font arial,
     pw.Font arialBold,
-    pw.Widget Function(String, {bool bold, bool center, PdfColor bg, double fontSize, List<pw.Font> fontFallback}) cell,
+    pw.Widget Function(String,
+            {bool bold,
+            bool center,
+            PdfColor bg,
+            double fontSize,
+            List<pw.Font> fontFallback})
+        cell,
     pw.Font checkmarkFont,
   ) {
     const t0 = 11.8;
@@ -860,13 +1023,22 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       bool bottom = false,
       double bw = 0.5,
       PdfColor? bg,
-    }) => pw.BoxDecoration(
+    }) =>
+        pw.BoxDecoration(
           color: bg,
           border: pw.Border(
-            top: top ? pw.BorderSide(color: black, width: 0.5) : pw.BorderSide.none,
-            left: left ? pw.BorderSide(color: black, width: 0.5) : pw.BorderSide.none,
-            right: right ? pw.BorderSide(color: black, width: 0.5) : pw.BorderSide.none,
-            bottom: bottom ? pw.BorderSide(color: black, width: bw) : pw.BorderSide.none,
+            top: top
+                ? pw.BorderSide(color: black, width: 0.5)
+                : pw.BorderSide.none,
+            left: left
+                ? pw.BorderSide(color: black, width: 0.5)
+                : pw.BorderSide.none,
+            right: right
+                ? pw.BorderSide(color: black, width: 0.5)
+                : pw.BorderSide.none,
+            bottom: bottom
+                ? pw.BorderSide(color: black, width: bw)
+                : pw.BorderSide.none,
           ),
         );
 
@@ -883,7 +1055,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                 border: pw.Border.all(color: black, width: 0.5),
               ),
             ),
-            pw.Text(label, style: pw.TextStyle(font: arial, fontSize: 9, color: black)),
+            pw.Text(label,
+                style: pw.TextStyle(font: arial, fontSize: 9, color: black)),
           ],
         );
 
@@ -892,12 +1065,18 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       children: [
         // R0: small cell (no right) | FOR TESDA USE ONLY (no left, thick bottom)
         pw.Row(children: [
-          pw.Container(width: t0, height: h0, decoration: b(top: true, left: true, bottom: true, bw: thick), child: cell(' ', fontSize: 10)),
+          pw.Container(
+              width: t0,
+              height: h0,
+              decoration: b(top: true, left: true, bottom: true, bw: thick),
+              child: cell(' ', fontSize: 10)),
           pw.Container(
             width: t1 + t2 + t3,
             height: h0,
-            decoration: b(top: true, right: true, bottom: true, bw: thick, bg: headerBg),
-            child: cell('FOR TESDA USE ONLY', bold: true, center: true, fontSize: 10),
+            decoration: b(
+                top: true, right: true, bottom: true, bw: thick, bg: headerBg),
+            child: cell('FOR TESDA USE ONLY',
+                bold: true, center: true, fontSize: 10),
           ),
         ]),
         // R1: EVALUATOR'S REMARKS (full span, thick top, 2mm left padding, top-left)
@@ -905,34 +1084,62 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           pw.Container(
             width: tW,
             height: h1,
-            decoration: b(top: true, left: true, right: true, bottom: true, bw: thick),
+            decoration:
+                b(top: true, left: true, right: true, bottom: true, bw: thick),
             child: pw.Padding(
               padding: const pw.EdgeInsets.only(left: 5.67, top: 3), // 2mm left
               child: pw.Align(
                 alignment: pw.Alignment.topLeft,
-                child: pw.Text('EVALUATOR\u2019S REMARKS:', style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+                child: pw.Text('EVALUATOR\u2019S REMARKS:',
+                    style:
+                        pw.TextStyle(font: arial, fontSize: 10, color: black)),
               ),
             ),
           ),
         ]),
         // R2: [empty] | RECOMMENDATION: | [empty] | [empty] — no internal verticals, no bottom
         pw.Row(children: [
-          pw.Container(width: t0, height: h2, decoration: b(top: true, left: true), child: cell(' ', fontSize: 10)),
-          pw.Container(width: t1, height: h2, decoration: b(top: true), child: cell('RECOMMENDATION:', fontSize: 10)),
-          pw.Container(width: t2, height: h2, decoration: b(top: true), child: cell(' ', fontSize: 10)),
-          pw.Container(width: t3, height: h2, decoration: b(top: true, right: true), child: cell(' ', fontSize: 10)),
+          pw.Container(
+              width: t0,
+              height: h2,
+              decoration: b(top: true, left: true),
+              child: cell(' ', fontSize: 10)),
+          pw.Container(
+              width: t1,
+              height: h2,
+              decoration: b(top: true),
+              child: cell('RECOMMENDATION:', fontSize: 10)),
+          pw.Container(
+              width: t2,
+              height: h2,
+              decoration: b(top: true),
+              child: cell(' ', fontSize: 10)),
+          pw.Container(
+              width: t3,
+              height: h2,
+              decoration: b(top: true, right: true),
+              child: cell(' ', fontSize: 10)),
         ]),
         // R3: small | For re-accreditation | YES / NO (stacked) | For further review
         // No top, no internal verticals
         pw.Row(children: [
-          pw.Container(width: t0, height: h3, decoration: b(left: true, bottom: true), child: cell(' ', fontSize: 10)),
-          pw.Container(width: t1, height: h3, decoration: b(bottom: true), child: cell('For re-accreditation', fontSize: 10)),
+          pw.Container(
+              width: t0,
+              height: h3,
+              decoration: b(left: true, bottom: true),
+              child: cell(' ', fontSize: 10)),
+          pw.Container(
+              width: t1,
+              height: h3,
+              decoration: b(bottom: true),
+              child: cell('For re-accreditation', fontSize: 10)),
           pw.Container(
             width: t2,
             height: h3,
             decoration: b(bottom: true),
             child: pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              padding:
+                  const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 mainAxisAlignment: pw.MainAxisAlignment.center,
@@ -943,8 +1150,13 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
               ),
             ),
           ),
-          pw.Container(width: t3, height: h3, decoration: b(right: true, bottom: true), child: pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+          pw.Container(
+            width: t3,
+            height: h3,
+            decoration: b(right: true, bottom: true),
+            child: pw.Padding(
+              padding:
+                  const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               child: pw.Align(
                 alignment: pw.Alignment.topCenter,
                 child: checkboxLabel('For further review'),
@@ -982,7 +1194,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     const cPrepared = 292.5;
     const cDateLine = 233.35;
 
-    pw.Widget labelCell(String text, double w, double h, {bool isLastRow = false}) {
+    pw.Widget labelCell(String text, double w, double h,
+        {bool isLastRow = false}) {
       return pw.Container(
         width: w,
         height: h,
@@ -991,7 +1204,9 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           border: pw.Border(
             top: pw.BorderSide(color: black, width: rapBorder),
             left: pw.BorderSide(color: black, width: rapBorder),
-            bottom: isLastRow ? pw.BorderSide(color: black, width: rapBorder) : pw.BorderSide.none,
+            bottom: isLastRow
+                ? pw.BorderSide(color: black, width: rapBorder)
+                : pw.BorderSide.none,
           ),
         ),
         padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
@@ -1003,7 +1218,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       );
     }
 
-    pw.Widget valueCell(String text, double w, double h, {bool last = false, bool isLastRow = false}) {
+    pw.Widget valueCell(String text, double w, double h,
+        {bool last = false, bool isLastRow = false}) {
       return pw.Container(
         width: w,
         height: h,
@@ -1011,8 +1227,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           border: pw.Border(
             top: pw.BorderSide(color: black, width: rapBorder),
             left: pw.BorderSide(color: black, width: rapBorder),
-            right: last ? pw.BorderSide(color: black, width: rapBorder) : pw.BorderSide.none,
-            bottom: isLastRow ? pw.BorderSide(color: black, width: rapBorder) : pw.BorderSide.none,
+            right: last
+                ? pw.BorderSide(color: black, width: rapBorder)
+                : pw.BorderSide.none,
+            bottom: isLastRow
+                ? pw.BorderSide(color: black, width: rapBorder)
+                : pw.BorderSide.none,
           ),
         ),
         padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
@@ -1024,7 +1244,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
       );
     }
 
-    pw.Widget emptyCell(double w, double h, {bool last = false, bool isLastRow = false}) {
+    pw.Widget emptyCell(double w, double h,
+        {bool last = false, bool isLastRow = false}) {
       return pw.Container(
         width: w,
         height: h,
@@ -1032,8 +1253,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           border: pw.Border(
             top: pw.BorderSide(color: black, width: rapBorder),
             left: pw.BorderSide(color: black, width: rapBorder),
-            right: last ? pw.BorderSide(color: black, width: rapBorder) : pw.BorderSide.none,
-            bottom: isLastRow ? pw.BorderSide(color: black, width: rapBorder) : pw.BorderSide.none,
+            right: last
+                ? pw.BorderSide(color: black, width: rapBorder)
+                : pw.BorderSide.none,
+            bottom: isLastRow
+                ? pw.BorderSide(color: black, width: rapBorder)
+                : pw.BorderSide.none,
           ),
         ),
         padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
@@ -1058,7 +1283,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     ];
 
     return pw.Container(
-      padding: const pw.EdgeInsets.only(top: 36.0, left: 34.725, right: 34.725, bottom: 72),
+      padding: const pw.EdgeInsets.only(
+          top: 36.0, left: 34.725, right: 34.725, bottom: 72),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -1066,7 +1292,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text('TESDA-OP-CO-05-F34',
-                style: pw.TextStyle(font: arialBold, fontSize: 10, color: black)),
+                style:
+                    pw.TextStyle(font: arialBold, fontSize: 10, color: black)),
           ),
           pw.Align(
             alignment: pw.Alignment.centerRight,
@@ -1076,7 +1303,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
           pw.SizedBox(height: 12),
           pw.Center(
             child: pw.Text('REPORT ON ASSESSMENT PROCEEDINGS',
-                style: pw.TextStyle(font: arialBold, fontSize: 12, color: black)),
+                style:
+                    pw.TextStyle(font: arialBold, fontSize: 12, color: black)),
           ),
           pw.SizedBox(height: 12),
           // Main table
@@ -1088,18 +1316,24 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                 children: [
                   // Row 0: Center name
                   pw.Row(children: [
-                    labelCell('Name of Competency Assessment Center', cLabel, 28.8),
+                    labelCell(
+                        'Name of Competency Assessment Center', cLabel, 28.8),
                     valueCell(' $centerName', cValue, 28.8, last: true),
                   ]),
                   // Row 1: Accreditation Number
                   pw.Row(children: [
                     labelCell('Accreditation Number', cLabel, 16.05),
-                    valueCell(' ${widget.center['accreditation_number']?.toString() ?? ''}', cValue, 16.05, last: true),
+                    valueCell(
+                        ' ${widget.center['accreditation_number']?.toString() ?? ''}',
+                        cValue,
+                        16.05,
+                        last: true),
                   ]),
                   // Row 2: Title of Qualification
                   pw.Row(children: [
                     labelCell('Title of Qualification', cLabel, 15.95),
-                    valueCell(' ${widget.qualification}', cValue, 15.95, last: true),
+                    valueCell(' ${widget.qualification}', cValue, 15.95,
+                        last: true),
                   ]),
                   // Row 3: Date of Assessment | No. of Candidates
                   pw.Row(children: [
@@ -1111,7 +1345,9 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                   // Row 4: Name of Competency Assessor
                   pw.Row(children: [
                     labelCell('Name of Competency Assessor', cLabel, 14.8),
-                    valueCell(' ${widget.assessorName}', cValue, 14.8, last: true),
+                    valueCell(
+                        ' ${widget.assessorName.toUpperCase()}', cValue, 14.8,
+                        last: true),
                   ]),
                   // Row 5: Findings and Observations
                   pw.Container(
@@ -1129,7 +1365,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                     child: pw.Align(
                       alignment: pw.Alignment.centerLeft,
                       child: pw.Text('Findings and Observations:',
-                          style: pw.TextStyle(font: arialBold, fontSize: 10, color: black)),
+                          style: pw.TextStyle(
+                              font: arialBold, fontSize: 10, color: black)),
                     ),
                   ),
                   // Row 6: Column headers
@@ -1145,8 +1382,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                         ),
                       ),
                       padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
-                      child: pw.Center(child: pw.Text('Items',
-                          style: pw.TextStyle(font: arialBold, fontSize: 10, color: black))),
+                      child: pw.Center(
+                          child: pw.Text('Items',
+                              style: pw.TextStyle(
+                                  font: arialBold,
+                                  fontSize: 10,
+                                  color: black))),
                     ),
                     pw.Container(
                       width: cYes,
@@ -1159,8 +1400,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                         ),
                       ),
                       padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
-                      child: pw.Center(child: pw.Text('Yes',
-                          style: pw.TextStyle(font: arialBold, fontSize: 10, color: black))),
+                      child: pw.Center(
+                          child: pw.Text('Yes',
+                              style: pw.TextStyle(
+                                  font: arialBold,
+                                  fontSize: 10,
+                                  color: black))),
                     ),
                     pw.Container(
                       width: cNo,
@@ -1173,8 +1418,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                         ),
                       ),
                       padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
-                      child: pw.Center(child: pw.Text('No',
-                          style: pw.TextStyle(font: arialBold, fontSize: 10, color: black))),
+                      child: pw.Center(
+                          child: pw.Text('No',
+                              style: pw.TextStyle(
+                                  font: arialBold,
+                                  fontSize: 10,
+                                  color: black))),
                     ),
                     pw.Container(
                       width: cAreas,
@@ -1188,8 +1437,12 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                         ),
                       ),
                       padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
-                      child: pw.Center(child: pw.Text('Areas for Improvement',
-                          style: pw.TextStyle(font: arialBold, fontSize: 10, color: black))),
+                      child: pw.Center(
+                          child: pw.Text('Areas for Improvement',
+                              style: pw.TextStyle(
+                                  font: arialBold,
+                                  fontSize: 10,
+                                  color: black))),
                     ),
                   ]),
                   // Rows 7-18: 12 items
@@ -1204,11 +1457,13 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                             left: pw.BorderSide(color: black, width: rapBorder),
                           ),
                         ),
-                        padding: const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
+                        padding:
+                            const pw.EdgeInsets.fromLTRB(5.2, 0.3, 2.3, 0.3),
                         child: pw.Align(
                           alignment: pw.Alignment.centerLeft,
                           child: pw.Text(rapItems[i],
-                              style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+                              style: pw.TextStyle(
+                                  font: arial, fontSize: 10, color: black)),
                         ),
                       ),
                       emptyCell(cYes, 28.1),
@@ -1232,7 +1487,8 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                       alignment: pw.Alignment.topLeft,
                       child: pw.Text(
                           'Narrative:  (Recommended areas for improvement of items which are not covered or named above)',
-                          style: pw.TextStyle(font: arialBold, fontSize: 10, color: black)),
+                          style: pw.TextStyle(
+                              font: arialBold, fontSize: 10, color: black)),
                     ),
                   ),
                   // Row 20: Prepared by | Date
@@ -1247,18 +1503,30 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                           bottom: pw.BorderSide(color: black, width: rapBorder),
                         ),
                       ),
-                      padding: const pw.EdgeInsets.fromLTRB(5.2, 5.67, 2.3, 0.3),
+                      padding:
+                          const pw.EdgeInsets.fromLTRB(5.2, 5.67, 2.3, 0.3),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text('Prepared by:',
-                              style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+                              style: pw.TextStyle(
+                                  font: arial, fontSize: 10, color: black)),
                           pw.SizedBox(height: 4),
-                          pw.Center(child: pw.Text('____________________________________',
-                              style: pw.TextStyle(font: arial, fontSize: 10, color: black))),
+                          pw.Center(
+                              child: pw.Text(
+                                  '____________________________________',
+                                  style: pw.TextStyle(
+                                      font: arial,
+                                      fontSize: 10,
+                                      color: black))),
                           pw.SizedBox(height: 4),
-                          pw.Center(child: pw.Text('Signature over Printed Name (TESDA Rep)',
-                              style: pw.TextStyle(font: arial, fontSize: 10, color: black))),
+                          pw.Center(
+                              child: pw.Text(
+                                  'Signature over Printed Name (TESDA Rep)',
+                                  style: pw.TextStyle(
+                                      font: arial,
+                                      fontSize: 10,
+                                      color: black))),
                         ],
                       ),
                     ),
@@ -1268,15 +1536,21 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                       decoration: pw.BoxDecoration(
                         border: pw.Border.all(color: black, width: rapBorder),
                       ),
-                      padding: const pw.EdgeInsets.fromLTRB(5.2, 5.67, 2.3, 0.3),
+                      padding:
+                          const pw.EdgeInsets.fromLTRB(5.2, 5.67, 2.3, 0.3),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text('Date:',
-                              style: pw.TextStyle(font: arial, fontSize: 10, color: black)),
+                              style: pw.TextStyle(
+                                  font: arial, fontSize: 10, color: black)),
                           pw.SizedBox(height: 4),
-                          pw.Center(child: pw.Text('_____________________',
-                              style: pw.TextStyle(font: arial, fontSize: 10, color: black))),
+                          pw.Center(
+                              child: pw.Text('_____________________',
+                                  style: pw.TextStyle(
+                                      font: arial,
+                                      fontSize: 10,
+                                      color: black))),
                         ],
                       ),
                     ),
@@ -1313,9 +1587,14 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
     }
     if (pages.isEmpty) pages.add([]);
 
+    final titleParts = <String>['5 Attendance'];
+    if (widget.includePei) titleParts.add('2 PEI');
+    if (widget.includeRap) titleParts.add('1 RAP');
+    final previewTitle = 'Print Preview (${titleParts.join(', ')})';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Print Preview (5 Attendance, 2 PEI, 1 RAP)'),
+        title: Text(previewTitle),
         actions: [
           IconButton(
             icon: _printing
@@ -1340,15 +1619,19 @@ class _AttendancePrintScreenState extends State<AttendancePrintScreen> {
                 color: Colors.white,
                 child: Column(
                   children: pages
-                      .map((page) => AttendanceSheetPage(
-                            assessees: page,
-                            centerName: centerName,
-                            qualification: qualification,
-                            dateOfAssessment: widget.dateOfAssessment,
-                            assessorName: widget.assessorName,
-                            assessorAccreditationNumber:
-                                widget.assessorAccreditationNumber,
-                            acManagerName: widget.acManagerName,
+                      .map((page) => SizedBox(
+                            width: PdfPageFormat.a4.width,
+                            height: PdfPageFormat.a4.height,
+                            child: AttendanceSheetPage(
+                              assessees: page,
+                              centerName: centerName,
+                              qualification: qualification,
+                              dateOfAssessment: widget.dateOfAssessment,
+                              assessorName: widget.assessorName,
+                              assessorAccreditationNumber:
+                                  widget.assessorAccreditationNumber,
+                              acManagerName: widget.acManagerName,
+                            ),
                           ))
                       .toList(),
                 ),
@@ -1435,16 +1718,12 @@ class AttendanceHeader extends StatelessWidget {
               Text(
                 'TESDA-OP-CO-05-F31',
                 style: TextStyle(
-                    fontSize: 8,
-                    fontFamily: 'Arial',
-                    color: Colors.black),
+                    fontSize: 8, fontFamily: 'Arial', color: Colors.black),
               ),
               Text(
                 'Rev. No. 00-03/08/17',
                 style: TextStyle(
-                    fontSize: 8,
-                    fontFamily: 'Arial',
-                    color: Colors.black),
+                    fontSize: 8, fontFamily: 'Arial', color: Colors.black),
               ),
             ],
           ),
@@ -1461,20 +1740,16 @@ class AttendanceHeader extends StatelessWidget {
         // Organization name
         const Text(
           'Technical Education and Skills Development Authority',
-          style: TextStyle(
-              fontSize: 10,
-              fontFamily: 'Arial',
-              color: Colors.black),
+          style:
+              TextStyle(fontSize: 10, fontFamily: 'Arial', color: Colors.black),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 3.78),
         // Program
         const Text(
           'ASSESSMENT AND CERTIFICATION PROGRAM',
-          style: TextStyle(
-              fontSize: 10,
-              fontFamily: 'Arial',
-              color: Colors.black),
+          style:
+              TextStyle(fontSize: 10, fontFamily: 'Arial', color: Colors.black),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 11.34),
@@ -1493,9 +1768,7 @@ class AttendanceHeader extends StatelessWidget {
         Text(
           qualification,
           style: const TextStyle(
-              fontSize: 11,
-              fontFamily: 'Arial',
-              color: Colors.black),
+              fontSize: 11, fontFamily: 'Arial', color: Colors.black),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 15.12),
@@ -1561,9 +1834,7 @@ class _InfoCell extends StatelessWidget {
       child: Text(
         text,
         style: const TextStyle(
-            fontSize: 9,
-            fontFamily: 'Arial',
-            color: Colors.black),
+            fontSize: 9, fontFamily: 'Arial', color: Colors.black),
       ),
     );
   }
@@ -1580,15 +1851,15 @@ class AttendanceTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rowCount = assessees.length > 10 ? assessees.length : 10;
+    final rowCount = assessees.length;
     return Table(
       border: TableBorder.all(color: Colors.black, width: 1),
       columnWidths: const {
         0: FixedColumnWidth(25),
         1: FlexColumnWidth(3.0),
         2: FlexColumnWidth(1.8),
-        3: FlexColumnWidth(1.5),
-        4: FlexColumnWidth(1.5),
+        3: FlexColumnWidth(2.2),
+        4: FlexColumnWidth(1.3),
       },
       children: [
         // Header row - no background color
@@ -1606,9 +1877,8 @@ class AttendanceTable extends StatelessWidget {
           TableRow(
             children: [
               _TableBodyCell('${i + 1}.'),
-              _TableBodyCell(i < assessees.length
-                  ? _formatName(assessees[i])
-                  : ''),
+              _TableBodyCell(
+                  i < assessees.length ? _formatName(assessees[i]) : ''),
               _TableBodyCell(i < assessees.length
                   ? assessees[i]['reference_number']?.toString() ?? ''
                   : ''),
@@ -1624,8 +1894,11 @@ class AttendanceTable extends StatelessWidget {
     final last = a['last_name']?.toString() ?? '';
     final first = a['first_name']?.toString() ?? '';
     final middle = a['middle_name']?.toString() ?? '';
+    final ext = a['extension_name']?.toString() ?? '';
+    final lastWithExt = ext.isNotEmpty ? '$last $ext' : last;
     if (first.isNotEmpty || last.isNotEmpty) {
-      final parts = [first, middle, last].where((p) => p.isNotEmpty).join(' ');
+      final parts =
+          [first, middle, lastWithExt].where((p) => p.isNotEmpty).join(' ');
       return parts.toUpperCase();
     }
     return (a['name']?.toString() ?? '').toUpperCase();
@@ -1639,7 +1912,7 @@ class _TableHeaderCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       child: Text(
         text,
         style: const TextStyle(
@@ -1661,13 +1934,11 @@ class _TableBodyCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Text(
         text,
         style: const TextStyle(
-            fontSize: 8,
-            fontFamily: 'Arial',
-            color: Colors.black),
+            fontSize: 8, fontFamily: 'Arial', color: Colors.black),
       ),
     );
   }
@@ -1784,10 +2055,11 @@ class _SignatureBox extends StatelessWidget {
             alignment: Alignment.center,
             child: Column(
               children: [
-                Text(name,
+                Text(name.toUpperCase(),
                     style: const TextStyle(
                         fontSize: 8,
                         fontFamily: 'Arial',
+                        fontWeight: FontWeight.bold,
                         color: Colors.black),
                     textAlign: TextAlign.center),
                 Container(height: 1, color: Colors.black),
@@ -1799,9 +2071,7 @@ class _SignatureBox extends StatelessWidget {
             child: Text(
               'Signature over Printed Name',
               style: TextStyle(
-                  fontSize: 8,
-                  fontFamily: 'Arial',
-                  color: Colors.black),
+                  fontSize: 8, fontFamily: 'Arial', color: Colors.black),
               textAlign: TextAlign.center,
             ),
           ),

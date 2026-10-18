@@ -1,10 +1,10 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -23,8 +23,59 @@ class RapPrintScreen extends StatefulWidget {
   State<RapPrintScreen> createState() => _RapPrintScreenState();
 }
 
+/// Formats typed digits into M/d/yy or MM/dd/yy on the fly.
+/// e.g. 41205 -> 4/12/05, 041205 -> 04/12/05, 111205 -> 11/12/05.
+class _NumericDateInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+    if (digits.length > 6) return oldValue;
+
+    String formatted;
+    if (digits.startsWith('0')) {
+      if (digits.length <= 2) {
+        formatted = digits;
+      } else if (digits.length <= 4) {
+        formatted =
+            '${digits.substring(0, 2)}/${digits.substring(2)}';
+      } else {
+        formatted =
+            '${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4)}';
+      }
+    } else {
+      if (digits.length <= 1) {
+        formatted = digits;
+      } else if (digits.length <= 3) {
+        formatted = '${digits[0]}/${digits.substring(1)}';
+      } else if (digits.length == 4) {
+        formatted =
+            '${digits[0]}/${digits.substring(1, 3)}/${digits.substring(3)}';
+      } else {
+        formatted =
+            '${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4)}';
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class _RapPrintScreenState extends State<RapPrintScreen> {
   final _previewKey = GlobalKey();
+  final _assessmentDate = TextEditingController();
+  final _qualification = TextEditingController();
   Map<String, dynamic>? _record;
   bool _loading = true;
   bool _exporting = false;
@@ -33,12 +84,33 @@ class _RapPrintScreenState extends State<RapPrintScreen> {
   @override
   void initState() { super.initState(); _load(); }
 
+  @override
+  void dispose() {
+    _assessmentDate.dispose();
+    _qualification.dispose();
+    super.dispose();
+  }
+
+  String _shortDateText(String? value) {
+    if (value == null || value.trim().isEmpty) return '';
+    final iso = DateTime.tryParse(value);
+    if (iso != null) {
+      return '${iso.month}/${iso.day}/${iso.year.toString().substring(2)}';
+    }
+    return value;
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final res = await ApiClient.get('/documents/${widget.code}');
       if (!mounted) return;
-      setState(() { _record = res.data as Map<String, dynamic>; _loading = false; });
+      _record = res.data as Map<String, dynamic>;
+      _assessmentDate.text = _shortDateText(_p('assessmentDate'));
+      _qualification.text = _p('qualificationTitle').isNotEmpty
+          ? _p('qualificationTitle')
+          : _p('qualification');
+      setState(() => _loading = false);
     } catch (e) {
       if (!mounted) return;
       setState(() { _error = e.toString(); _loading = false; });
@@ -233,8 +305,85 @@ class _RapPrintScreenState extends State<RapPrintScreen> {
         : _record == null ? const EmptyState(icon: Icons.description_outlined, title: 'Document not found')
         : SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
-            child: Center(child: ExcludeSemantics(child: RepaintBoundary(key: _previewKey, child: _buildDocument()))),
+            child: Column(
+              children: [
+                _buildInputs(),
+                const SizedBox(height: AppTheme.spaceLg),
+                Center(child: ExcludeSemantics(child: RepaintBoundary(key: _previewKey, child: _buildDocument()))),
+              ],
+            ),
           ),
+    );
+  }
+
+  Widget _buildInputs() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 600),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _qualification,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Qualification',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _assessmentDate,
+                keyboardType: TextInputType.number,
+                inputFormatters: [_NumericDateInputFormatter()],
+                decoration: InputDecoration(
+                  labelText: 'Date of Assessment (M/d/yy)',
+                  hintText: 'M/d/yy',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today, size: 18),
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      DateTime? initial;
+                      final text = _assessmentDate.text.trim();
+                      if (text.isNotEmpty) {
+                        initial = DateTime.tryParse(text);
+                        if (initial == null) {
+                          final parts = text.split('/');
+                          if (parts.length == 3) {
+                            final month = int.tryParse(parts[0]);
+                            final day = int.tryParse(parts[1]);
+                            final year = int.tryParse(parts[2]);
+                            if (month != null && day != null &&
+                                year != null) {
+                              final fullYear = year < 100
+                                  ? (year < 30 ? 2000 + year : 1900 + year)
+                                  : year;
+                              initial = DateTime(fullYear, month, day);
+                            }
+                          }
+                        }
+                      }
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: initial ?? now,
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime(now.year + 20),
+                      );
+                      if (picked == null) return;
+                      _assessmentDate.text =
+                          '${picked.month}/${picked.day}/${picked.year.toString().substring(2, 4)}';
+                      setState(() {});
+                    },
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -286,7 +435,7 @@ class _RapPrintScreenState extends State<RapPrintScreen> {
       _cell(width: _cLabel, height: _rowHeights[2], bg: _headerBg,
         child: _txt('Title of Qualification', style: _f10b)),
       _cell(width: _cValue, height: _rowHeights[2], isLastInRow: true,
-        child: _txt(' ${_p('qualificationTitle')}', style: _f10)),
+        child: _txt(' ${_qualification.text}', style: _f10)),
     ]));
 
     // Row 3: Date of Assessment | value | No. of Candidates | value
@@ -294,7 +443,7 @@ class _RapPrintScreenState extends State<RapPrintScreen> {
       _cell(width: _cLabel, height: _rowHeights[3], bg: _headerBg,
         child: _txt('Date of Assessment', style: _f10b)),
       _cell(width: _cDateVal, height: _rowHeights[3],
-        child: _txt(' ${_p('assessmentDate')}', style: _f10)),
+        child: _txt(' ${_assessmentDate.text}', style: _f10)),
       _cell(width: _cNoLabel, height: _rowHeights[3], bg: _headerBg,
         child: _txt('No. of Candidates', style: _f10b)),
       _cell(width: _cNoVal, height: _rowHeights[3], isLastInRow: true,

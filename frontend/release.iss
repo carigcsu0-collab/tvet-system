@@ -3,7 +3,7 @@
 ; running `flutter build windows --release`.
 
 #define MyAppName "TVET Documents"
-#define MyAppVersion "1.0.8"
+#define MyAppVersion "1.0.11"
 #define MyAppPublisher "TVET"
 #define MyAppExeName "tvet_documents.exe"
 
@@ -17,7 +17,7 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 PrivilegesRequired=admin
 OutputDir=release_output
-OutputBaseFilename=tvet_documents_setup
+OutputBaseFilename=tvet_documents_setup_v1.0.11
 SetupIconFile=windows\runner\resources\app_icon.ico
 Compression=lzma2
 SolidCompression=yes

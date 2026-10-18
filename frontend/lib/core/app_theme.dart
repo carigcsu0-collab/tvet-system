@@ -190,6 +190,11 @@ class AppTheme {
         ),
         dividerThickness: 0.5,
       ),
+      scrollbarTheme: const ScrollbarThemeData(
+        thickness: WidgetStatePropertyAll<double?>(12.0),
+        radius: Radius.circular(8),
+        thumbVisibility: WidgetStatePropertyAll<bool>(true),
+      ),
       navigationDrawerTheme: NavigationDrawerThemeData(
         backgroundColor: Colors.white,
         indicatorColor: csuMaroon.withValues(alpha: 0.08),
@@ -358,6 +363,11 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
         ),
+      ),
+      scrollbarTheme: const ScrollbarThemeData(
+        thickness: WidgetStatePropertyAll<double?>(12.0),
+        radius: Radius.circular(8),
+        thumbVisibility: WidgetStatePropertyAll<bool>(true),
       ),
       navigationDrawerTheme: NavigationDrawerThemeData(
         backgroundColor: const Color(0xFF1E1C1D),

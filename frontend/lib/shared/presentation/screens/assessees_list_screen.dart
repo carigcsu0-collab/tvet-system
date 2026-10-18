@@ -38,8 +38,7 @@ class _NumericDateInputFormatter extends TextInputFormatter {
       if (digits.length <= 2) {
         formatted = digits;
       } else if (digits.length <= 4) {
-        formatted =
-            '${digits.substring(0, 2)}/${digits.substring(2)}';
+        formatted = '${digits.substring(0, 2)}/${digits.substring(2)}';
       } else {
         formatted =
             '${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4)}';
@@ -465,6 +464,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
   /// Builds the headers and rows shared by the print and export functions.
   /// The Paid/Unpaid status is taken verbatim from the system records so an
+  /// unpaid assessee is never reported as paid in any exported file.
   String _candidateTypeLabel(Map<String, dynamic> assessee) {
     final candidateType = (widget.type == 'assessment'
             ? assessee['assessment_candidate_type']
@@ -483,7 +483,6 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     return labels[candidateType] ?? '';
   }
 
-  /// unpaid assessee is never reported as paid in any exported file.
   (List<String>, List<List<String>>) _buildExportData() {
     if (_assessees == null || _assessees!.isEmpty) {
       return (<String>[], <List<String>>[]);
@@ -497,8 +496,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         ? [
             'Name',
             'Qualification',
-            'Category',
             'Competency',
+            'Category',
             'Ref No.',
             'ULI',
             'Assessment Fee',
@@ -509,8 +508,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
           ]
         : [
             'Name',
-            'Category',
             'Qualification',
+            'Category',
             'Ref No.',
             'ULI',
             'Last School',
@@ -529,8 +528,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         return [
           m['name']?.toString() ?? '',
           m['qualification']?.toString() ?? '',
-          _candidateTypeLabel(m),
           m['competency']?.toString() ?? '',
+          _candidateTypeLabel(m),
           m['reference_number']?.toString() ?? '',
           m['uli']?.toString() ?? '',
           (m['assessment_fee_paid'] == true) ? 'Paid' : 'Unpaid',
@@ -542,8 +541,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       }
       return [
         m['name']?.toString() ?? '',
-        _candidateTypeLabel(m),
         m['qualification']?.toString() ?? '',
+        _candidateTypeLabel(m),
         m['reference_number']?.toString() ?? '',
         m['uli']?.toString() ?? '',
         m['last_school_attended']?.toString() ?? '',
@@ -618,7 +617,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     required String extension,
   }) async {
     // Desktop: use the native save dialog.
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       final outputPath = await FilePicker.platform.saveFile(
         dialogTitle: dialogTitle,
         fileName: fileName,
@@ -690,7 +690,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               data: data,
               border: null,
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+              headerDecoration:
+                  const pw.BoxDecoration(color: PdfColors.grey200),
               cellHeight: 24,
               cellStyle: const pw.TextStyle(fontSize: 8),
               headerCellDecoration:
@@ -703,9 +704,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       final pdfBytes = await pdf.save();
       final safeName = _exportFileName();
       await _saveFile(pdfBytes,
-          dialogTitle: 'Save PDF',
-          fileName: '$safeName.pdf',
-          extension: 'pdf');
+          dialogTitle: 'Save PDF', fileName: '$safeName.pdf', extension: 'pdf');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -832,8 +831,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     // Build entity strings from char codes so the source does not contain
     // raw HTML entities that could be mangled by tooling.
     final amp = String.fromCharCode(38); // &
-    final lt = String.fromCharCode(60);  // <
-    final gt = String.fromCharCode(62);  // >
+    final lt = String.fromCharCode(60); // <
+    final gt = String.fromCharCode(62); // >
     final quot = String.fromCharCode(34); // "
     final ampEnt = '${amp}amp;';
     final ltEnt = '${amp}lt;';
@@ -984,9 +983,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     }
 
     // Validate all selected assessees have the same assessment_date
-    final dates = selectedMaps
-        .map((a) => a['assessment_date']?.toString() ?? '')
-        .toSet();
+    final dates =
+        selectedMaps.map((a) => a['assessment_date']?.toString() ?? '').toSet();
     if (dates.length > 1) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -999,9 +997,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     }
 
     // Validate all selected assessees have the same assessor
-    final assessors = selectedMaps
-        .map((a) => a['assessor']?.toString() ?? '')
-        .toSet();
+    final assessors =
+        selectedMaps.map((a) => a['assessor']?.toString() ?? '').toSet();
     if (assessors.length > 1) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1014,9 +1011,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     }
 
     // Validate all selected assessees have the same qualification
-    final qualifications = selectedMaps
-        .map((a) => a['qualification']?.toString() ?? '')
-        .toSet();
+    final qualifications =
+        selectedMaps.map((a) => a['qualification']?.toString() ?? '').toSet();
     if (qualifications.length > 1) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1125,6 +1121,16 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
   Future<void> _showBulkUpdateDialog() async {
     final assessorController = TextEditingController();
     final dateController = TextEditingController();
+    final isAssessment = widget.type == 'assessment';
+    String? bulkCompetency;
+    String? bulkCategory;
+    final categoryOptions = isAssessment
+        ? const {
+            'internal': 'Internal',
+            'external_walk_in': 'External - Walk-in',
+            'external_scholar': 'External - Scholar',
+          }
+        : const {'walk_in': 'Walk-in', 'scholar': 'Scholar'};
 
     await showDialog<void>(
       context: context,
@@ -1150,12 +1156,10 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                         final name = a['name']?.toString() ?? '';
                         final accred =
                             a['accreditation_number']?.toString() ?? '';
-                        final label =
-                            accred.isEmpty ? name : '$name ($accred)';
+                        final label = accred.isEmpty ? name : '$name ($accred)';
                         return DropdownMenuItem<String?>(
                           value: a['id']?.toString(),
-                          child:
-                              Text(label, overflow: TextOverflow.ellipsis),
+                          child: Text(label, overflow: TextOverflow.ellipsis),
                         );
                       }),
                     ],
@@ -1178,6 +1182,45 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     label: 'Assessment Date',
                     onChanged: () => setDialogState(() {}),
                   ),
+                  if (isAssessment) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String?>(
+                      initialValue: bulkCompetency,
+                      isExpanded: true,
+                      decoration:
+                          const InputDecoration(labelText: 'Competency'),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('— No change —'),
+                        ),
+                        ..._competencyOptions.map((c) =>
+                            DropdownMenuItem<String?>(value: c, child: Text(c))),
+                      ],
+                      onChanged: (v) =>
+                          setDialogState(() => bulkCompetency = v),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String?>(
+                    initialValue: bulkCategory,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: isAssessment
+                          ? 'Assessee Category'
+                          : 'Trainee Category',
+                    ),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('— No change —'),
+                      ),
+                      ...categoryOptions.entries.map((e) =>
+                          DropdownMenuItem<String?>(
+                              value: e.key, child: Text(e.value))),
+                    ],
+                    onChanged: (v) => setDialogState(() => bulkCategory = v),
+                  ),
                 ],
               ),
             ),
@@ -1189,15 +1232,22 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             ),
             FilledButton(
               onPressed: () {
-                final ids = _selected
-                    .map((i) => _assessees![i]['id'] as int)
-                    .toList();
+                final ids =
+                    _selected.map((i) => _assessees![i]['id'] as int).toList();
                 final payload = <String, dynamic>{'ids': ids};
                 if (assessorController.text.trim().isNotEmpty) {
                   payload['assessor'] = assessorController.text.trim();
                 }
                 if (dateController.text.trim().isNotEmpty) {
                   payload['assessment_date'] = dateController.text.trim();
+                }
+                if (bulkCompetency != null) {
+                  payload['competency'] = bulkCompetency;
+                }
+                if (bulkCategory != null) {
+                  payload[isAssessment
+                      ? 'assessment_candidate_type'
+                      : 'training_candidate_type'] = bulkCategory;
                 }
                 Navigator.of(context).pop();
                 _bulkUpdate(payload);
@@ -1301,11 +1351,18 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       text: assessee?['assessor']?.toString() ?? '',
     );
     final assessmentDate = TextEditingController(
-      text: _normalizeDate(assessee?['assessment_date'], format: _birthdayFormat),
+      text:
+          _normalizeDate(assessee?['assessment_date'], format: _birthdayFormat),
     );
 
     int? selectedCenterId = assessee?['assessment_center_id'] as int?;
     bool assessmentFeePaid = assessee?['assessment_fee_paid'] == true;
+    bool processingFeePaid = assessee?['processing_fee_paid'] == true;
+    bool registrationForm = assessee?['registration_form'] == true;
+    bool medicalCertificate = assessee?['medical_certificate'] == true;
+    bool brgyIndigency = assessee?['brgy_indigency'] == true;
+    bool brgyClearance = assessee?['brgy_clearance'] == true;
+    bool tor = assessee?['tor_form137_138'] == true;
     String? selectedCandidateType;
     if (assessee != null) {
       selectedCandidateType = (widget.type == 'assessment'
@@ -1313,12 +1370,6 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               : assessee['training_candidate_type'])
           ?.toString();
     }
-    bool processingFeePaid = assessee?['processing_fee_paid'] == true;
-    bool registrationForm = assessee?['registration_form'] == true;
-    bool medicalCertificate = assessee?['medical_certificate'] == true;
-    bool brgyIndigency = assessee?['brgy_indigency'] == true;
-    bool brgyClearance = assessee?['brgy_clearance'] == true;
-    bool tor = assessee?['tor_form137_138'] == true;
 
     if (selectedCenterId == null && (_centers?.isNotEmpty ?? false)) {
       selectedCenterId = _selectedCenterId ?? _centers!.first['id'] as int?;
@@ -1346,7 +1397,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
     String? selectedAssessorId;
     if (assessor.text.trim().isNotEmpty) {
-      final matchingAssessors = _assessorsForQualification(selectedQualification);
+      final matchingAssessors =
+          _assessorsForQualification(selectedQualification);
       final match = matchingAssessors.where(
         (a) => a['name']?.toString() == assessor.text.trim(),
       );
@@ -1467,6 +1519,11 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   TextFormField(
                     controller: age,
                     keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Age'),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 8),
                   DropdownButtonFormField<String?>(
                     initialValue: selectedCandidateType,
                     isExpanded: true,
@@ -1494,11 +1551,6 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     validator: (value) => value == null ? 'Required' : null,
                     onChanged: (value) =>
                         setDialogState(() => selectedCandidateType = value),
-                  ),
-                  const SizedBox(height: 8),
-                    decoration: const InputDecoration(labelText: 'Age'),
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: 8),
                   if (widget.type == 'assessment') ...[
@@ -1582,9 +1634,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                             final name = a['name']?.toString() ?? '';
                             final accred =
                                 a['accreditation_number']?.toString() ?? '';
-                            final label = accred.isEmpty
-                                ? name
-                                : '$name ($accred)';
+                            final label =
+                                accred.isEmpty ? name : '$name ($accred)';
                             return DropdownMenuItem<String?>(
                               value: a['id']?.toString(),
                               child:
@@ -1597,8 +1648,9 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                           final picked = assessorOptions.where(
                             (a) => a['id']?.toString() == v,
                           );
-                          assessor.text =
-                              picked.isEmpty ? '' : picked.first['name']?.toString() ?? '';
+                          assessor.text = picked.isEmpty
+                              ? ''
+                              : picked.first['name']?.toString() ?? '';
                         }),
                       );
                     }),
@@ -1687,12 +1739,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   'middle_name': middleName.text.trim(),
                   'extension_name': extensionName.text.trim(),
                   'birthday': birthday.text.trim(),
-                    'assessment_candidate_type': selectedCandidateType,
                   'age': int.tryParse(age.text) ?? 0,
                   'qualification': qualification.text.trim(),
                 };
                 if (widget.type == 'assessment') {
                   payload.addAll({
+                    'assessment_candidate_type': selectedCandidateType,
                     'uli': uli.text.trim(),
                     'reference_number': referenceNumber.text.trim(),
                     'competency': competency.text.trim(),
@@ -1708,12 +1760,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     'registration_form': false,
                     'medical_certificate': false,
                     'brgy_indigency': false,
-                    'training_candidate_type': selectedCandidateType,
                     'brgy_clearance': false,
                     'tor_form137_138': false,
                   });
                 } else {
                   payload.addAll({
+                    'training_candidate_type': selectedCandidateType,
                     'uli': uli.text.trim(),
                     'reference_number': referenceNumber.text.trim(),
                     'contact_number': contactNumber.text.trim(),
@@ -1821,12 +1873,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
       return ErrorState(message: _error!, onRetry: _load);
     }
     final columns = widget.type == 'assessment'
-            DataColumn(label: Text('Category')),
         ? const [
             DataColumn(label: Text('Name')),
             DataColumn(label: Text('Birthday')),
             DataColumn(label: Text('Qualification')),
             DataColumn(label: Text('Competency')),
+            DataColumn(label: Text('Category')),
             DataColumn(label: Text('Ref No.')),
             DataColumn(label: Text('ULI')),
             DataColumn(label: Text('A. Fee')),
@@ -1836,12 +1888,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             DataColumn(label: Text('Assessor')),
             DataColumn(label: Text('Date of Assessment')),
             DataColumn(label: Text('Actions')),
-            DataColumn(label: Text('Category')),
           ]
         : const [
             DataColumn(label: Text('Name')),
             DataColumn(label: Text('Birthday')),
             DataColumn(label: Text('Qualification')),
+            DataColumn(label: Text('Category')),
             DataColumn(label: Text('Ref No.')),
             DataColumn(label: Text('ULI')),
             DataColumn(label: Text('Last School')),
@@ -1872,12 +1924,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               }
             });
           },
-            DataCell(Text(_candidateTypeLabel(m))),
           cells: [
             DataCell(SelectableText(m['name']?.toString() ?? '')),
             DataCell(SelectableText(_formatDate(m['birthday']))),
             DataCell(Text(m['qualification']?.toString() ?? '')),
             DataCell(Text(m['competency']?.toString() ?? '')),
+            DataCell(Text(_candidateTypeLabel(m))),
             DataCell(Text(m['reference_number']?.toString() ?? '')),
             DataCell(SelectableText(m['uli']?.toString() ?? '')),
             DataCell((m['assessment_fee_paid'] == true)
@@ -1917,11 +1969,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
               _selected.remove(index);
             }
           });
-          DataCell(Text(_candidateTypeLabel(m))),
         },
         cells: [
           DataCell(Text(m['name']?.toString() ?? '')),
+          DataCell(SelectableText(_formatDate(m['birthday']))),
           DataCell(Text(m['qualification']?.toString() ?? '')),
+          DataCell(Text(_candidateTypeLabel(m))),
           DataCell(Text(m['reference_number']?.toString() ?? '')),
           DataCell(Text(m['uli']?.toString() ?? '')),
           DataCell(Text(m['last_school_attended']?.toString() ?? '')),
@@ -2076,8 +2129,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                   items: competencyItems,
                   onChanged: (v) {
@@ -2093,8 +2146,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                   items: assessorItems,
                   onChanged: (v) {
@@ -2110,8 +2163,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                   items: paidItems,
                   onChanged: (v) {
@@ -2187,11 +2240,10 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     ),
                   ],
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline,
                       ),
@@ -2281,8 +2333,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                 ),
                 // Total income for the current filter — count × center fee.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.spaceLg,
-                      0, AppTheme.spaceLg, AppTheme.spaceSm),
+                  padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spaceLg, 0, AppTheme.spaceLg, AppTheme.spaceSm),
                   child: Card(
                     color: AppTheme.csuMaroon.withValues(alpha: 0.06),
                     shape: RoundedRectangleBorder(
@@ -2366,20 +2418,20 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
                         showCheckboxColumn: true,
-                      headingRowColor: WidgetStateColor.resolveWith(
-                          (_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
-                      onSelectAll: (selected) {
-                        setState(() {
-                          _selected = selected == true
-                              ? Set<int>.from(
-                                  List.generate(list.length, (i) => i))
-                              : <int>{};
-                        });
-                      },
-                      columns: columns,
-                      rows: rows,
+                        headingRowColor: WidgetStateColor.resolveWith(
+                            (_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
+                        onSelectAll: (selected) {
+                          setState(() {
+                            _selected = selected == true
+                                ? Set<int>.from(
+                                    List.generate(list.length, (i) => i))
+                                : <int>{};
+                          });
+                        },
+                        columns: columns,
+                        rows: rows,
+                      ),
                     ),
-                  ),
                   ),
               ],
             ),

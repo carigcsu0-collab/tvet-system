@@ -8,10 +8,10 @@ class PaymentSlipScreen extends StatefulWidget {
   const PaymentSlipScreen({super.key});
 
   @override
-  State<PaymentSlipScreen> createState() => _PaymentSlipScreenState();
+  State<PaymentSlipScreen> createState() => PaymentSlipScreenState();
 }
 
-class _PaymentSlipScreenState extends State<PaymentSlipScreen> {
+class PaymentSlipScreenState extends State<PaymentSlipScreen> {
   List<dynamic>? _users;
   String? _selectedUserId;
   List<String> _selectedDesignations = [];
@@ -48,6 +48,15 @@ class _PaymentSlipScreenState extends State<PaymentSlipScreen> {
     _firstName.dispose();
     _middleInitial.dispose();
     super.dispose();
+  }
+
+  /// Re-fetch centers (qualification fees) and payment slips. Called when
+  /// this tab is revisited so any fee changes made on the Centers tab are
+  /// reflected here (this screen stays mounted inside an IndexedStack, so
+  /// initState only runs once).
+  Future<void> reload() async {
+    await _loadCenters();
+    await _loadSlips();
   }
 
   Future<void> _loadCenters() async {
