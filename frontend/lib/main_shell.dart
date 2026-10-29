@@ -15,6 +15,7 @@ import 'shared/presentation/screens/document_records_screen.dart';
 import 'shared/presentation/screens/payment_slip_screen.dart';
 import 'shared/presentation/screens/pei_screen.dart';
 import 'shared/presentation/screens/rap_screen.dart';
+import 'shared/presentation/screens/tesda_billing_screen.dart';
 import 'shared/presentation/screens/training_batches_screen.dart';
 import 'shared/presentation/screens/users_screen.dart';
 import 'shared/presentation/widgets/app_nav_drawer.dart';
@@ -28,6 +29,7 @@ final _trainingKey = GlobalKey<AssesseesListScreenState>();
 final _paymentSlipKey = GlobalKey<PaymentSlipScreenState>();
 final _trainingBatchesKey = GlobalKey<TrainingBatchesScreenState>();
 final _mealsKey = GlobalKey<MealsComputationScreenState>();
+final _tesdaBillingKey = GlobalKey<TesdaBillingScreenState>();
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -57,6 +59,7 @@ class _MainShellState extends State<MainShell> {
       'Assessment Centers',
       'Training Centers',
       'Training Attendance & Billing',
+      'TESDA Billing Monitoring',
       'Meals Computation',
       'User Accounts',
       'Account Logs',
@@ -77,6 +80,7 @@ class _MainShellState extends State<MainShell> {
       AssesseesListScreen(key: _assessmentKey, type: 'assessment'),
       AssesseesListScreen(key: _trainingKey, type: 'training'),
       TrainingBatchesScreen(key: _trainingBatchesKey),
+      TesdaBillingScreen(key: _tesdaBillingKey),
       MealsComputationScreen(key: _mealsKey),
       const UsersScreen(),
       const ActivityLogsScreen(),
@@ -129,6 +133,8 @@ class _MainShellState extends State<MainShell> {
                 } else if (i == 12) {
                   _trainingBatchesKey.currentState?.load();
                 } else if (i == 13) {
+                  _tesdaBillingKey.currentState?.load();
+                } else if (i == 14) {
                   _mealsKey.currentState?.load();
                 }
               },

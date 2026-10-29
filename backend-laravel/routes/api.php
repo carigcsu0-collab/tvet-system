@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\PeiDocumentController;
 use App\Http\Controllers\Api\RapDocumentController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TrainingAttendanceController;
+use App\Http\Controllers\Api\TesdaBillingController;
 use App\Http\Controllers\Api\TrainingBatchController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -105,6 +106,10 @@ Route::middleware('api.auth')->group(function () {
     Route::put('/reimbursements/{reimbursement}', [ReimbursementController::class, 'update']);
     Route::delete('/reimbursements/{reimbursement}', [ReimbursementController::class, 'destroy']);
 
+    Route::get('/tesda-billings', [TesdaBillingController::class, 'index']);
+    Route::post('/tesda-billings', [TesdaBillingController::class, 'store']);
+    Route::put('/tesda-billings/{tesdaBilling}', [TesdaBillingController::class, 'update']);
+    Route::delete('/tesda-billings/{tesdaBilling}', [TesdaBillingController::class, 'destroy']);
     Route::get('/meal-computations', [MealComputationController::class, 'index']);
     Route::post('/meal-computations', [MealComputationController::class, 'store']);
     Route::get('/meal-computations/{mealComputation}', [MealComputationController::class, 'show']);

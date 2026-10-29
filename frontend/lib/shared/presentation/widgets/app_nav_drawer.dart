@@ -181,6 +181,11 @@ class AppNavDrawer extends StatelessWidget {
           label: Text('Training Attendance & Billing'),
         ),
         const NavigationDrawerDestination(
+          icon: Icon(Icons.receipt_long_outlined),
+          selectedIcon: Icon(Icons.receipt_long),
+          label: Text('TESDA Billing Monitoring'),
+        ),
+        const NavigationDrawerDestination(
           icon: Icon(Icons.restaurant_outlined),
           selectedIcon: Icon(Icons.restaurant),
           label: Text('Meals Computation'),
