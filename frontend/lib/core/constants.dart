@@ -1,6 +1,8 @@
 class AppConstants {
-  static const String apiBaseUrl = 'https://tvet-system.onrender.com/api/v1';
-  static const String apiHost = 'https://tvet-system.onrender.com';
+  static const String apiBaseUrl =
+      'https://kept-informal-cave-efficient.trycloudflare.com/api/v1';
+  static const String apiHost =
+      'https://kept-informal-cave-efficient.trycloudflare.com';
 
   static const String certificateSlug = 'certificate-of-appearance';
   static const String internalSlug = 'internal-communication';

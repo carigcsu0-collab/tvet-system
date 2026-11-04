@@ -483,6 +483,19 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     return labels[candidateType] ?? '';
   }
 
+  bool _isExternalCandidate(String? candidateType) =>
+      candidateType == 'external_walk_in' ||
+      candidateType == 'external_scholar';
+
+  /// Shows the school and Scholar/Walk-in status for external assessees only.
+  String _externalSchoolLabel(Map<String, dynamic> assessee) {
+    final candidateType = assessee['assessment_candidate_type']?.toString();
+    if (!_isExternalCandidate(candidateType)) return '';
+    final school = assessee['external_school']?.toString().trim() ?? '';
+    final status = candidateType == 'external_scholar' ? 'Scholar' : 'Walk-in';
+    return school.isEmpty ? status : '$school ($status)';
+  }
+
   (List<String>, List<List<String>>) _buildExportData() {
     if (_assessees == null || _assessees!.isEmpty) {
       return (<String>[], <List<String>>[]);
@@ -498,6 +511,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             'Qualification',
             'Competency',
             'Category',
+            'External School',
             'Ref No.',
             'ULI',
             'Assessment Fee',
@@ -530,6 +544,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
           m['qualification']?.toString() ?? '',
           m['competency']?.toString() ?? '',
           _candidateTypeLabel(m),
+          _externalSchoolLabel(m),
           m['reference_number']?.toString() ?? '',
           m['uli']?.toString() ?? '',
           (m['assessment_fee_paid'] == true) ? 'Paid' : 'Unpaid',
@@ -1338,6 +1353,9 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     final lastSchool = TextEditingController(
       text: assessee?['last_school_attended']?.toString() ?? '',
     );
+    final externalSchool = TextEditingController(
+      text: assessee?['external_school']?.toString() ?? '',
+    );
     final competency = TextEditingController(
       text: assessee?['competency']?.toString() ?? '',
     );
@@ -1553,6 +1571,17 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                         setDialogState(() => selectedCandidateType = value),
                   ),
                   const SizedBox(height: 8),
+                  if (widget.type == 'assessment' &&
+                      _isExternalCandidate(selectedCandidateType)) ...[
+                    TextFormField(
+                    controller: externalSchool,
+                      decoration: const InputDecoration(
+                          labelText: 'External School Attended'),
+                      validator: (v) =>
+                          v == null || v.trim().isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   if (widget.type == 'assessment') ...[
                     TextFormField(
                       controller: uli,
@@ -1757,6 +1786,9 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     'contact_number': null,
                     'email': null,
                     'last_school_attended': null,
+                    'external_school': _isExternalCandidate(selectedCandidateType)
+                        ? externalSchool.text.trim()
+                        : null,
                     'registration_form': false,
                     'medical_certificate': false,
                     'brgy_indigency': false,
@@ -1879,6 +1911,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             DataColumn(label: Text('Qualification')),
             DataColumn(label: Text('Competency')),
             DataColumn(label: Text('Category')),
+            DataColumn(label: Text('External School')),
             DataColumn(label: Text('Ref No.')),
             DataColumn(label: Text('ULI')),
             DataColumn(label: Text('A. Fee')),
@@ -1930,6 +1963,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             DataCell(Text(m['qualification']?.toString() ?? '')),
             DataCell(Text(m['competency']?.toString() ?? '')),
             DataCell(Text(_candidateTypeLabel(m))),
+            DataCell(Text(_externalSchoolLabel(m))),
             DataCell(Text(m['reference_number']?.toString() ?? '')),
             DataCell(SelectableText(m['uli']?.toString() ?? '')),
             DataCell((m['assessment_fee_paid'] == true)

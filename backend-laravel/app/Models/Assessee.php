@@ -17,6 +17,7 @@ class Assessee extends Model
         'training_batch_id',
         'assessment_candidate_type',
         'training_candidate_type',
+        'external_school',
         'name',
         'last_name',
         'first_name',
