@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: tvet_backend_api
+    container_name: tvet-backend
     restart: unless-stopped
     ports:
       - "8001:80"
