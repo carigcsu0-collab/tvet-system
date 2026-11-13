@@ -6,9 +6,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: tdms
-      MYSQL_USER: tvet
-      MYSQL_PASSWORD: tvetpass
-      MYSQL_ROOT_PASSWORD: tvetrootpass
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: Admin12345
+      MYSQL_ROOT_PASSWORD: Admin12345
     ports:
       - "3306:3306"
     volumes:

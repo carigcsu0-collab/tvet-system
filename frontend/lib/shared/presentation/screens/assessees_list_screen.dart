@@ -91,18 +91,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
   String? _selectedAssessor;
   String? _selectedPaid; // 'Paid', 'Unpaid', or null
   Set<int> _selected = <int>{};
-  final _tableScrollController = ScrollController();
+  final Set<int> _expanded = <int>{};
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _tableScrollController.dispose();
-    super.dispose();
   }
 
   /// Reloads assessees and centers. Called from the shell whenever this tab
@@ -246,10 +240,27 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         return name.contains(query) || qual.contains(query);
       }).toList();
     }
+    final availableDates = _datesForQualification(_selectedQualification).toSet();
     setState(() {
       _assessees = list;
+      _selectedDates.removeWhere((d) => !availableDates.contains(d));
       _selected.clear();
+      _expanded.clear();
     });
+  }
+
+  /// Distinct assessment dates, limited to the selected qualification when one is set.
+  List<String> _datesForQualification(String? qualification) {
+    final all = _allAssessees ?? [];
+    final source = qualification == null
+        ? all
+        : all.where((a) => a['qualification']?.toString() == qualification);
+    return source
+        .map((a) => _normalizeDate(a['assessment_date']))
+        .where((d) => d.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
   }
 
   /// Multi-select date filter: opens a dialog with a checkbox per distinct
@@ -1896,6 +1907,194 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     );
   }
 
+  void _toggleSelected(int index, bool? value) {
+    setState(() {
+      if (value == true) {
+        _selected.add(index);
+      } else {
+        _selected.remove(index);
+      }
+    });
+  }
+
+  Widget _buildDetailList(List<dynamic> list) {
+    const headerStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.w600);
+    final allSelected = list.isNotEmpty && _selected.length == list.length;
+    return Column(
+      children: [
+        Container(
+          color: AppTheme.csuMaroon.withValues(alpha: 0.06),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          child: Row(
+            children: [
+              Checkbox(
+                value: allSelected,
+                onChanged: (v) {
+                  setState(() {
+                    _selected = v == true
+                        ? Set<int>.from(List.generate(list.length, (i) => i))
+                        : <int>{};
+                  });
+                },
+              ),
+              const Expanded(
+                  flex: 3, child: Text('Name', style: headerStyle)),
+              const Expanded(
+                  flex: 2, child: Text('Birthday', style: headerStyle)),
+              const Expanded(flex: 3, child: Text('ULI', style: headerStyle)),
+              const SizedBox(width: 48),
+            ],
+          ),
+        ),
+        for (var i = 0; i < list.length; i++) ...[
+          const Divider(height: 1),
+          _buildDetailRow(i, list[i] as Map<String, dynamic>),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(int index, Map<String, dynamic> m) {
+    final expanded = _expanded.contains(index);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            children: [
+              Checkbox(
+                value: _selected.contains(index),
+                onChanged: (v) => _toggleSelected(index, v),
+              ),
+              Expanded(
+                flex: 3,
+                child: SelectableText(m['name']?.toString() ?? ''),
+              ),
+              Expanded(
+                flex: 2,
+                child: SelectableText(_formatDate(m['birthday'])),
+              ),
+              Expanded(
+                flex: 3,
+                child: SelectableText(m['uli']?.toString() ?? ''),
+              ),
+              IconButton(
+                tooltip: expanded ? 'Hide details' : 'Show details',
+                icon: AnimatedRotation(
+                  turns: expanded ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: const Icon(Icons.chevron_right),
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (expanded) {
+                      _expanded.remove(index);
+                    } else {
+                      _expanded.add(index);
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        if (expanded)
+          Container(
+            width: double.infinity,
+            color: AppTheme.csuMaroon.withValues(alpha: 0.02),
+            padding: const EdgeInsets.fromLTRB(56, 4, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 32,
+                  runSpacing: 12,
+                  children: _detailItems(m),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Edit'),
+                      onPressed: () => _showForm(assessee: m),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.delete_outline,
+                          size: 18, color: AppTheme.error),
+                      label: const Text('Delete',
+                          style: TextStyle(color: AppTheme.error)),
+                      onPressed: () => _deleteAssessee(m),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  List<Widget> _detailItems(Map<String, dynamic> m) {
+    if (widget.type == 'assessment') {
+      return [
+        _detailItem('Qualification', Text(m['qualification']?.toString() ?? '')),
+        _detailItem('Competency', Text(m['competency']?.toString() ?? '')),
+        _detailItem('Category', Text(_candidateTypeLabel(m))),
+        _detailItem('External School', Text(_externalSchoolLabel(m))),
+        _detailItem('Ref No.', Text(m['reference_number']?.toString() ?? '')),
+        _detailItem(
+            'A. Fee',
+            (m['assessment_fee_paid'] == true)
+                ? StatusBadge.success('Paid')
+                : StatusBadge.warning('Unpaid')),
+        _detailItem(
+            'P. Fee',
+            (m['processing_fee_paid'] == true)
+                ? StatusBadge.success('Paid')
+                : StatusBadge.warning('Unpaid')),
+        _detailItem('OR', Text(m['official_receipt']?.toString() ?? '')),
+        _detailItem('Receipt Date', Text(_formatDate(m['receipt_date']))),
+        _detailItem('Assessor', Text(m['assessor']?.toString() ?? '')),
+        _detailItem(
+            'Date of Assessment', Text(_formatDate(m['assessment_date']))),
+      ];
+    }
+    return [
+      _detailItem('Qualification', Text(m['qualification']?.toString() ?? '')),
+      _detailItem('Category', Text(_candidateTypeLabel(m))),
+      _detailItem('Ref No.', Text(m['reference_number']?.toString() ?? '')),
+      _detailItem('Last School', Text(m['last_school_attended']?.toString() ?? '')),
+      _detailItem('Contact', Text(m['contact_number']?.toString() ?? '')),
+      _detailItem('Email', Text(m['email']?.toString() ?? '')),
+      _detailItem('Reg', _yesNoBadge(m['registration_form'])),
+      _detailItem('Med', _yesNoBadge(m['medical_certificate'])),
+      _detailItem('Indi', _yesNoBadge(m['brgy_indigency'])),
+      _detailItem('Clear', _yesNoBadge(m['brgy_clearance'])),
+      _detailItem('TOR', _yesNoBadge(m['tor_form137_138'])),
+    ];
+  }
+
+  Widget _yesNoBadge(Object? value) => value == true
+      ? StatusBadge.success('Yes')
+      : StatusBadge.warning('No');
+
+  Widget _detailItem(String label, Widget value) {
+    return SizedBox(
+      width: 180,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+          const SizedBox(height: 2),
+          value,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -1904,148 +2103,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     if (_error != null) {
       return ErrorState(message: _error!, onRetry: _load);
     }
-    final columns = widget.type == 'assessment'
-        ? const [
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Birthday')),
-            DataColumn(label: Text('Qualification')),
-            DataColumn(label: Text('Competency')),
-            DataColumn(label: Text('Category')),
-            DataColumn(label: Text('External School')),
-            DataColumn(label: Text('Ref No.')),
-            DataColumn(label: Text('ULI')),
-            DataColumn(label: Text('A. Fee')),
-            DataColumn(label: Text('P. Fee')),
-            DataColumn(label: Text('OR')),
-            DataColumn(label: Text('Receipt Date')),
-            DataColumn(label: Text('Assessor')),
-            DataColumn(label: Text('Date of Assessment')),
-            DataColumn(label: Text('Actions')),
-          ]
-        : const [
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Birthday')),
-            DataColumn(label: Text('Qualification')),
-            DataColumn(label: Text('Category')),
-            DataColumn(label: Text('Ref No.')),
-            DataColumn(label: Text('ULI')),
-            DataColumn(label: Text('Last School')),
-            DataColumn(label: Text('Contact')),
-            DataColumn(label: Text('Email')),
-            DataColumn(label: Text('Reg')),
-            DataColumn(label: Text('Med')),
-            DataColumn(label: Text('Indi')),
-            DataColumn(label: Text('Clear')),
-            DataColumn(label: Text('TOR')),
-            DataColumn(label: Text('Actions')),
-          ];
-
     final list = _assessees ?? [];
-    final rows = list.asMap().entries.map<DataRow>((entry) {
-      final index = entry.key;
-      final m = entry.value as Map<String, dynamic>;
-      final selected = _selected.contains(index);
-      if (widget.type == 'assessment') {
-        return DataRow(
-          selected: selected,
-          onSelectChanged: (v) {
-            setState(() {
-              if (v == true) {
-                _selected.add(index);
-              } else {
-                _selected.remove(index);
-              }
-            });
-          },
-          cells: [
-            DataCell(SelectableText(m['name']?.toString() ?? '')),
-            DataCell(SelectableText(_formatDate(m['birthday']))),
-            DataCell(Text(m['qualification']?.toString() ?? '')),
-            DataCell(Text(m['competency']?.toString() ?? '')),
-            DataCell(Text(_candidateTypeLabel(m))),
-            DataCell(Text(_externalSchoolLabel(m))),
-            DataCell(Text(m['reference_number']?.toString() ?? '')),
-            DataCell(SelectableText(m['uli']?.toString() ?? '')),
-            DataCell((m['assessment_fee_paid'] == true)
-                ? StatusBadge.success('Paid')
-                : StatusBadge.warning('Unpaid')),
-            DataCell((m['processing_fee_paid'] == true)
-                ? StatusBadge.success('Paid')
-                : StatusBadge.warning('Unpaid')),
-            DataCell(Text(m['official_receipt']?.toString() ?? '')),
-            DataCell(Text(_formatDate(m['receipt_date']))),
-            DataCell(Text(m['assessor']?.toString() ?? '')),
-            DataCell(Text(_formatDate(m['assessment_date']))),
-            DataCell(Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: () => _showForm(assessee: m),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      size: 20, color: AppTheme.error),
-                  onPressed: () => _deleteAssessee(m),
-                ),
-              ],
-            )),
-          ],
-        );
-      }
-      return DataRow(
-        selected: selected,
-        onSelectChanged: (v) {
-          setState(() {
-            if (v == true) {
-              _selected.add(index);
-            } else {
-              _selected.remove(index);
-            }
-          });
-        },
-        cells: [
-          DataCell(Text(m['name']?.toString() ?? '')),
-          DataCell(SelectableText(_formatDate(m['birthday']))),
-          DataCell(Text(m['qualification']?.toString() ?? '')),
-          DataCell(Text(_candidateTypeLabel(m))),
-          DataCell(Text(m['reference_number']?.toString() ?? '')),
-          DataCell(Text(m['uli']?.toString() ?? '')),
-          DataCell(Text(m['last_school_attended']?.toString() ?? '')),
-          DataCell(Text(m['contact_number']?.toString() ?? '')),
-          DataCell(Text(m['email']?.toString() ?? '')),
-          DataCell((m['registration_form'] == true)
-              ? StatusBadge.success('Yes')
-              : StatusBadge.warning('No')),
-          DataCell((m['medical_certificate'] == true)
-              ? StatusBadge.success('Yes')
-              : StatusBadge.warning('No')),
-          DataCell((m['brgy_indigency'] == true)
-              ? StatusBadge.success('Yes')
-              : StatusBadge.warning('No')),
-          DataCell((m['brgy_clearance'] == true)
-              ? StatusBadge.success('Yes')
-              : StatusBadge.warning('No')),
-          DataCell((m['tor_form137_138'] == true)
-              ? StatusBadge.success('Yes')
-              : StatusBadge.warning('No')),
-          DataCell(Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                onPressed: () => _showForm(assessee: m),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    size: 20, color: AppTheme.error),
-                onPressed: () => _deleteAssessee(m),
-              ),
-            ],
-          )),
-        ],
-      );
-    }).toList();
 
     final availableQualifications = _qualificationsFor(null);
     final qualificationItems = <DropdownMenuItem<String?>>[
@@ -2058,13 +2116,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
     // Build filter options from all assessees data
     final all = _allAssessees ?? [];
-    final availableDates = all
-        .map((a) => _normalizeDate(a['assessment_date']))
-        .where((d) => d.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
-    final dateItems = <String>[...availableDates];
+    final dateItems = _datesForQualification(_selectedQualification);
 
     final availableAssessors = all
         .map((a) => a['assessor']?.toString() ?? '')
@@ -2444,29 +2496,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                         'Add ${widget.type == 'assessment' ? 'assessees' : 'trainees'} to get started',
                   )
                 else
-                  Scrollbar(
-                    controller: _tableScrollController,
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      controller: _tableScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        showCheckboxColumn: true,
-                        headingRowColor: WidgetStateColor.resolveWith(
-                            (_) => AppTheme.csuMaroon.withValues(alpha: 0.06)),
-                        onSelectAll: (selected) {
-                          setState(() {
-                            _selected = selected == true
-                                ? Set<int>.from(
-                                    List.generate(list.length, (i) => i))
-                                : <int>{};
-                          });
-                        },
-                        columns: columns,
-                        rows: rows,
-                      ),
-                    ),
-                  ),
+                  _buildDetailList(list),
               ],
             ),
           ),

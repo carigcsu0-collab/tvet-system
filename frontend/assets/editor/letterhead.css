@@ -1,0 +1,217 @@
+@font-face {
+  font-family: 'CenturyGothic';
+  src: url('fonts/century_gothic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'CenturyGothic';
+  src: url('fonts/century_gothic_bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'CenturyGothic';
+  src: url('fonts/century_gothic_italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'CenturyGothic';
+  src: url('fonts/century_gothic_bolditalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Brush Script MT';
+  src: url('fonts/brush_script_mt.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Monotype Corsiva';
+  src: url('fonts/monotype_corsiva.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Constantia';
+  src: url('fonts/constantia.ttf') format('truetype');
+  font-weight: normal;
+}
+@font-face {
+  font-family: 'Constantia';
+  src: url('fonts/constantia_bold.ttf') format('truetype');
+  font-weight: bold;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #e5e5e5;
+}
+
+@page {
+  size: 210mm 297mm;
+  margin: 0;
+}
+
+.page {
+  position: relative;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20%;
+  background-image: url('images/side_bar.png');
+  background-size: 100% 100%;
+  padding: 21.2mm 7.8mm 35.3mm 6.4mm;
+  font-family: 'Monotype Corsiva', serif;
+  font-style: italic;
+  color: #000000;
+  font-size: 3.5mm;
+  line-height: 1.15;
+}
+
+.sidebar h3 {
+  font-family: 'Brush Script MT', cursive;
+  font-weight: bold;
+  font-style: italic;
+  font-size: 3.9mm;
+  margin: 0 0 1mm 0;
+}
+
+.sidebar .group {
+  font-weight: bold;
+  margin: 1.4mm 0 0.7mm 0;
+}
+
+.sidebar ul {
+  margin: 0 0 1.4mm 0;
+  padding-left: 2.8mm;
+}
+
+.sidebar li {
+  margin-bottom: 0.7mm;
+}
+
+.bottom-art {
+  position: absolute;
+  right: 12.7mm;
+  bottom: 38.1mm;
+  width: 45mm;
+  height: 24mm;
+  pointer-events: none;
+}
+
+.bottom-art img.building {
+  position: absolute;
+  right: 2mm;
+  bottom: 1.6mm;
+  width: 31.2mm;
+}
+
+.bottom-art img.eagle {
+  position: absolute;
+  right: 1mm;
+  bottom: 10.6mm;
+  width: 9mm;
+  transform: rotate(-20deg);
+}
+
+.content-frame {
+  position: relative;
+  margin-left: 20%;
+  padding: 12.7mm 12.7mm 38.1mm 12.7mm;
+  min-height: 297mm;
+}
+
+.letter-header {
+  text-align: center;
+  font-family: 'CenturyGothic', sans-serif;
+}
+
+.letter-header .row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4mm;
+}
+
+.letter-header img.logo {
+  height: 15.3mm;
+}
+
+.letter-header .republic {
+  font-size: 2.9mm;
+  color: #404040;
+  margin: 0;
+}
+
+.letter-header .university {
+  font-size: 4.2mm;
+  font-weight: bold;
+  color: #262626;
+  margin: 0;
+}
+
+.letter-header .campus {
+  font-size: 3.7mm;
+  color: #404040;
+  margin: 0;
+}
+
+.letter-header .address {
+  font-size: 2.6mm;
+  color: #404040;
+  margin: 0.5mm 0 0 0;
+}
+
+.letter-header .office {
+  font-family: 'Brush Script MT', cursive;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 4.5mm;
+  color: #595959;
+  margin-top: 2.6mm;
+}
+
+.letter-divider {
+  border: none;
+  border-top: 0.2mm solid #808080;
+  margin: 1.6mm 0 3.7mm 0;
+}
+
+.letter-body {
+  font-family: 'CenturyGothic', sans-serif;
+  font-size: 12pt;
+  color: #000000;
+  line-height: 1.6;
+  min-height: 130mm;
+}
+
+.letter-body p {
+  margin: 0 0 0 0;
+}
+
+.letter-footer {
+  position: absolute;
+  left: 12.7mm;
+  right: 12.7mm;
+  bottom: 12mm;
+  font-family: 'Constantia', serif;
+  font-size: 9pt;
+  color: #000000;
+}
+
+.letter-footer a {
+  color: #0462c1;
+  text-decoration: underline;
+}

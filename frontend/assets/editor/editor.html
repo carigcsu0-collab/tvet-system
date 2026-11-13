@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="letterhead.css">
+<link rel="stylesheet" href="quill.snow.css">
+<style>
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; }
+  #toolbar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ccc;
+  }
+  #page-scroll {
+    flex: 1;
+    overflow: auto;
+    padding: 8mm 0 20mm 0;
+  }
+  .letter-body.ql-container {
+    font-family: 'CenturyGothic', sans-serif;
+    font-size: 12pt;
+    border: none !important;
+  }
+  .letter-body .ql-editor {
+    padding: 0;
+    min-height: 130mm;
+  }
+  .letter-body .ql-editor.ql-blank::before {
+    font-style: normal;
+    color: #999;
+    left: 0;
+  }
+</style>
+</head>
+<body>
+  <div id="toolbar-wrap">
+    <div id="quill-toolbar">
+      <span class="ql-formats">
+        <select class="ql-font"></select>
+        <select class="ql-size"></select>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-bold"></button>
+        <button class="ql-italic"></button>
+        <button class="ql-underline"></button>
+        <button class="ql-strike"></button>
+      </span>
+      <span class="ql-formats">
+        <select class="ql-color"></select>
+        <select class="ql-background"></select>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-list" value="ordered"></button>
+        <button class="ql-list" value="bullet"></button>
+        <button class="ql-indent" value="-1"></button>
+        <button class="ql-indent" value="+1"></button>
+      </span>
+      <span class="ql-formats">
+        <select class="ql-align"></select>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-link"></button>
+        <button class="ql-image"></button>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-clean"></button>
+      </span>
+    </div>
+  </div>
+
+  <div id="page-scroll">
+    <div class="page">
+      <div class="sidebar">
+        <h3>VISION</h3>
+        <p>CSU is a University with global stature in the arts, culture, agriculture and fisheries, the sciences as well as technological and professional fields.</p>
+        <h3>MISSION</h3>
+        <p>Cagayan State University shall produce globally competent graduates through excellent instruction, innovative and creative research, responsive public service and productive industry and community engagement.</p>
+        <h3>CORE VALUES</h3>
+        <div class="group">Competence</div>
+        <ul>
+          <li>Critical Thinker</li>
+          <li>Creative Problem-Solver</li>
+          <li>Competitive Performer: Nationally, Regionally and Globally.</li>
+        </ul>
+        <div class="group">Social Responsibility</div>
+        <ul>
+          <li>Sensitive to Ethical Demands</li>
+          <li>Steward of the Environment for Future Generations</li>
+          <li>Social Justice and Economic Equity Advocate.</li>
+        </ul>
+        <div class="group">Unifying Presence</div>
+        <ul>
+          <li>Uniting Theory and Practice</li>
+          <li>Uniting Strata of Society</li>
+          <li>Unifying the Nation, the ASEAN Region and the world</li>
+          <li>Uniting the University and the community.</li>
+        </ul>
+      </div>
+
+      <div class="bottom-art">
+        <img class="building" src="images/csu_building.png">
+        <img class="eagle" src="images/csu_eagle.png">
+      </div>
+
+      <div class="content-frame">
+        <div class="letter-header">
+          <div class="row">
+            <img class="logo" src="images/csu_logo.png">
+            <div>
+              <p class="republic">Republic of the Philippines</p>
+              <p class="university">CAGAYAN STATE UNIVERSITY</p>
+              <p class="campus">CARIG CAMPUS</p>
+              <p class="address">Carig Sur, Tuguegarao City, Cagayan</p>
+            </div>
+          </div>
+          <p class="office">Campus TVET Office</p>
+        </div>
+        <hr class="letter-divider">
+
+        <div id="editor-body" class="letter-body"></div>
+
+        <div class="letter-footer">
+          <div>Website: <a href="#">http://www.csucarig.edu.ph</a></div>
+          <div>Email Address: <a href="#">tvet@csucarig.edu.ph</a></div>
+          <div>Local No. 042</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="quill.min.js"></script>
+  <script>
+    const Font = Quill.import('formats/font');
+    Font.whitelist = ['CenturyGothic', 'serif', 'monospace'];
+    Quill.register(Font, true);
+
+    const quill = new Quill('#editor-body', {
+      theme: 'snow',
+      modules: { toolbar: '#quill-toolbar' },
+      placeholder: 'Type the letter content here...'
+    });
+
+    // Bridge helpers exposed to Flutter via webview executeScript.
+    window.__getHtml = function () {
+      return document.querySelector('#editor-body .ql-editor').innerHTML;
+    };
+    window.__setHtml = function (html) {
+      quill.root.innerHTML = html;
+    };
+    window.__focus = function () {
+      quill.focus();
+    };
+  </script>
+</body>
+</html>
