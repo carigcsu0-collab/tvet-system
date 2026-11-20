@@ -186,6 +186,11 @@ class AppNavDrawer extends StatelessWidget {
           label: Text('TESDA Billing Monitoring'),
         ),
         const NavigationDrawerDestination(
+          icon: Icon(Icons.account_balance_wallet_outlined),
+          selectedIcon: Icon(Icons.account_balance_wallet),
+          label: Text('Scholar Billing Monitoring'),
+        ),
+        const NavigationDrawerDestination(
           icon: Icon(Icons.restaurant_outlined),
           selectedIcon: Icon(Icons.restaurant),
           label: Text('Meals Computation'),

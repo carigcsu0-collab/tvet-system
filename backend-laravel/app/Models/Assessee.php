@@ -38,6 +38,7 @@ class Assessee extends Model
         'receipt_date',
         'assessor',
         'assessment_date',
+        'assessment_session',
         'registration_form',
         'medical_certificate',
         'brgy_indigency',

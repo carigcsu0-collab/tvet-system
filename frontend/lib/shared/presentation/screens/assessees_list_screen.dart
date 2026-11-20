@@ -13,6 +13,7 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_theme.dart';
+import '../../../core/assessment_session.dart';
 import '../widgets/ui_components.dart';
 import 'attendance_print_screen.dart';
 
@@ -89,6 +90,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
   final Set<String> _selectedDates = {};
   String? _selectedCompetency;
   String? _selectedAssessor;
+  String? _selectedSession;
   String? _selectedPaid; // 'Paid', 'Unpaid', or null
   Set<int> _selected = <int>{};
   final Set<int> _expanded = <int>{};
@@ -225,6 +227,12 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     if (_selectedAssessor != null) {
       list = list
           .where((a) => a['assessor']?.toString() == _selectedAssessor)
+          .toList();
+    }
+    if (widget.type == 'assessment' && _selectedSession != null) {
+      list = list
+          .where((a) =>
+              assessmentSessionLabel(a['assessment_session']) == _selectedSession)
           .toList();
     }
     if (_selectedPaid != null) {
@@ -530,6 +538,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
             'OR',
             'Assessor',
             'Assessment Date',
+            'Session',
           ]
         : [
             'Name',
@@ -563,6 +572,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
           m['official_receipt']?.toString() ?? '',
           m['assessor']?.toString() ?? '',
           _formatDate(m['assessment_date']),
+          assessmentSessionLabel(m['assessment_session']),
         ];
       }
       return [
@@ -1150,6 +1160,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
     final isAssessment = widget.type == 'assessment';
     String? bulkCompetency;
     String? bulkCategory;
+    String? bulkSession;
     final categoryOptions = isAssessment
         ? const {
             'internal': 'Internal',
@@ -1210,6 +1221,21 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   ),
                   if (isAssessment) ...[
                     const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: bulkSession,
+                      isExpanded: true,
+                      decoration:
+                          const InputDecoration(labelText: 'Assessment Session'),
+                      items: const [
+                        DropdownMenuItem(value: null, child: Text('No change')),
+                        DropdownMenuItem(
+                            value: 'Whole Day', child: Text('Whole Day')),
+                        DropdownMenuItem(value: 'AM', child: Text('AM')),
+                        DropdownMenuItem(value: 'PM', child: Text('PM')),
+                      ],
+                      onChanged: (v) => setDialogState(() => bulkSession = v),
+                    ),
+                    const SizedBox(height: 12),
                     DropdownButtonFormField<String?>(
                       initialValue: bulkCompetency,
                       isExpanded: true,
@@ -1269,6 +1295,10 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                 }
                 if (bulkCompetency != null) {
                   payload['competency'] = bulkCompetency;
+                }
+                if (bulkSession != null) {
+                  payload['assessment_session'] =
+                      bulkSession == 'Whole Day' ? null : bulkSession;
                 }
                 if (bulkCategory != null) {
                   payload[isAssessment
@@ -1386,6 +1416,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
 
     int? selectedCenterId = assessee?['assessment_center_id'] as int?;
     bool assessmentFeePaid = assessee?['assessment_fee_paid'] == true;
+    String selectedSession =
+        assessmentSessionLabel(assessee?['assessment_session']);
     bool processingFeePaid = assessee?['processing_fee_paid'] == true;
     bool registrationForm = assessee?['registration_form'] == true;
     bool medicalCertificate = assessee?['medical_certificate'] == true;
@@ -1700,6 +1732,21 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                       label: 'Date of Assessment',
                       onChanged: () => setDialogState(() {}),
                     ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedSession,
+                      isExpanded: true,
+                      decoration:
+                          const InputDecoration(labelText: 'Assessment Session'),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'Whole Day', child: Text('Whole Day')),
+                        DropdownMenuItem(value: 'AM', child: Text('AM')),
+                        DropdownMenuItem(value: 'PM', child: Text('PM')),
+                      ],
+                      onChanged: (v) =>
+                          setDialogState(() => selectedSession = v ?? 'Whole Day'),
+                    ),
                   ] else ...[
                     TextFormField(
                       controller: uli,
@@ -1794,6 +1841,10 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                     'receipt_date': receiptDate.text.trim(),
                     'assessor': assessor.text.trim(),
                     'assessment_date': assessmentDate.text.trim(),
+                    'assessment_session':
+                        selectedSession == 'Whole Day'
+                            ? null
+                            : selectedSession,
                     'contact_number': null,
                     'email': null,
                     'last_school_attended': null,
@@ -2059,6 +2110,8 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         _detailItem('Assessor', Text(m['assessor']?.toString() ?? '')),
         _detailItem(
             'Date of Assessment', Text(_formatDate(m['assessment_date']))),
+        _detailItem(
+            'Session', Text(assessmentSessionLabel(m['assessment_session']))),
       ];
     }
     return [
@@ -2152,6 +2205,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
         _selectedDates.isNotEmpty ||
         _selectedCompetency != null ||
         _selectedAssessor != null ||
+        _selectedSession != null ||
         _selectedPaid != null ||
         _search.text.trim().isNotEmpty;
 
@@ -2259,6 +2313,30 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                   },
                 ),
               ),
+              if (widget.type == 'assessment')
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 160),
+                  child: DropdownButtonFormField<String?>(
+                    initialValue: _selectedSession,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: null, child: Text('All sessions')),
+                      DropdownMenuItem(
+                          value: 'Whole Day', child: Text('Whole Day')),
+                      DropdownMenuItem(value: 'AM', child: Text('AM')),
+                      DropdownMenuItem(value: 'PM', child: Text('PM')),
+                    ],
+                    onChanged: (v) {
+                      setState(() => _selectedSession = v);
+                      _applyFilters();
+                    },
+                  ),
+                ),
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Reload centers and records',
@@ -2407,6 +2485,7 @@ class AssesseesListScreenState extends State<AssesseesListScreen> {
                               _selectedDates.clear();
                               _selectedCompetency = null;
                               _selectedAssessor = null;
+                              _selectedSession = null;
                               _selectedPaid = null;
                               _search.clear();
                             });

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PeiDocumentController;
 use App\Http\Controllers\Api\RapDocumentController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\ScholarBillingController;
 use App\Http\Controllers\Api\TrainingAttendanceController;
 use App\Http\Controllers\Api\TesdaBillingController;
 use App\Http\Controllers\Api\TrainingBatchController;
@@ -110,6 +111,7 @@ Route::middleware('api.auth')->group(function () {
     Route::post('/tesda-billings', [TesdaBillingController::class, 'store']);
     Route::put('/tesda-billings/{tesdaBilling}', [TesdaBillingController::class, 'update']);
     Route::delete('/tesda-billings/{tesdaBilling}', [TesdaBillingController::class, 'destroy']);
+    Route::post('/scholar-billings/receive-bank-check', [ScholarBillingController::class, 'receiveBankCheck']);
     Route::get('/meal-computations', [MealComputationController::class, 'index']);
     Route::post('/meal-computations', [MealComputationController::class, 'store']);
     Route::get('/meal-computations/{mealComputation}', [MealComputationController::class, 'show']);

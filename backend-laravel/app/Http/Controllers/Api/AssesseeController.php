@@ -63,6 +63,7 @@ class AssesseeController extends Controller
             'receipt_date' => ['nullable', 'string', 'max:255'],
             'assessor' => ['nullable', 'string', 'max:255'],
             'assessment_date' => ['nullable', 'string', 'max:255'],
+            'assessment_session' => ['nullable', 'in:AM,PM'],
             'last_school_attended' => ['nullable', 'string', 'max:255'],
             'external_school' => ['nullable', 'string', 'max:255'],
             'registration_form' => ['nullable', 'boolean'],
@@ -105,6 +106,7 @@ class AssesseeController extends Controller
             'ids.*' => ['integer', 'exists:assessee_trainees,id'],
             'assessor' => ['nullable', 'string', 'max:255'],
             'assessment_date' => ['nullable', 'string', 'max:255'],
+            'assessment_session' => ['nullable', 'in:AM,PM'],
             'competency' => ['nullable', 'string', 'in:Pending,Competent,Not Yet Competent,Absent'],
             'assessment_candidate_type' => ['nullable', 'in:internal,external_walk_in,external_scholar'],
             'training_candidate_type' => ['nullable', 'in:walk_in,scholar'],
@@ -121,6 +123,9 @@ class AssesseeController extends Controller
         }
         if (array_key_exists('assessment_date', $validated)) {
             $update['assessment_date'] = $validated['assessment_date'];
+        }
+        if (array_key_exists('assessment_session', $validated)) {
+            $update['assessment_session'] = $validated['assessment_session'];
         }
 
         if ($update === []) {
@@ -161,6 +166,7 @@ class AssesseeController extends Controller
             'receipt_date' => ['nullable', 'string', 'max:255'],
             'assessor' => ['nullable', 'string', 'max:255'],
             'assessment_date' => ['nullable', 'string', 'max:255'],
+            'assessment_session' => ['nullable', 'in:AM,PM'],
             'last_school_attended' => ['nullable', 'string', 'max:255'],
             'external_school' => ['nullable', 'string', 'max:255'],
             'registration_form' => ['nullable', 'boolean'],
