@@ -7,16 +7,13 @@ import 'shared/presentation/screens/assessees_list_screen.dart';
 import 'shared/presentation/screens/assessor_fee_letter_screen.dart';
 import 'shared/presentation/screens/centers_screen.dart';
 import 'shared/presentation/screens/certificate_of_appearance_screen.dart';
+import 'shared/presentation/screens/code_monitoring_screen.dart';
 import 'shared/presentation/screens/dashboard_screen.dart';
 import 'shared/presentation/screens/document_code_settings_screen.dart';
 import 'shared/presentation/screens/document_monitoring_screen.dart';
-import 'shared/presentation/screens/meals_computation_screen.dart';
 import 'shared/presentation/screens/document_records_screen.dart';
 import 'shared/presentation/screens/payment_slip_screen.dart';
-import 'shared/presentation/screens/pei_screen.dart';
-import 'shared/presentation/screens/rap_screen.dart';
 import 'shared/presentation/screens/scholar_billing_screen.dart';
-import 'shared/presentation/screens/tesda_billing_screen.dart';
 import 'shared/presentation/screens/training_batches_screen.dart';
 import 'shared/presentation/screens/users_screen.dart';
 import 'shared/presentation/widgets/app_nav_drawer.dart';
@@ -29,9 +26,8 @@ final _assessmentKey = GlobalKey<AssesseesListScreenState>();
 final _trainingKey = GlobalKey<AssesseesListScreenState>();
 final _paymentSlipKey = GlobalKey<PaymentSlipScreenState>();
 final _trainingBatchesKey = GlobalKey<TrainingBatchesScreenState>();
-final _mealsKey = GlobalKey<MealsComputationScreenState>();
-final _tesdaBillingKey = GlobalKey<TesdaBillingScreenState>();
 final _scholarBillingKey = GlobalKey<ScholarBillingScreenState>();
+final _codeMonitoringKey = GlobalKey<CodeMonitoringScreenState>();
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -50,20 +46,17 @@ class _MainShellState extends State<MainShell> {
     final titles = [
       'Dashboard',
       'Certificate of Appearance',
-      'Report on Assessment Proceedings',
-      'Performance Evaluation Instrument',
       "Assessor's Fee",
       'Document Records',
       'Payment Slip',
       'Document Monitoring',
+      'Code Monitoring',
       'Centers',
       'Assessors',
       'Assessment Centers',
       'Training Centers',
       'Training Attendance & Billing',
-      'TESDA Billing Monitoring',
       'Scholar Billing Monitoring',
-      'Meals Computation',
       'User Accounts',
       'Account Logs',
       'Document Code Settings',
@@ -72,20 +65,17 @@ class _MainShellState extends State<MainShell> {
     final screens = [
       const DashboardScreen(),
       const CertificateOfAppearanceScreen(),
-      const RapScreen(),
-      const PeiScreen(),
       const AssessorFeeLetterScreen(),
       DocumentRecordsScreen(key: _documentRecordsKey),
       PaymentSlipScreen(key: _paymentSlipKey),
       const DocumentMonitoringScreen(),
+      CodeMonitoringScreen(key: _codeMonitoringKey),
       const CentersScreen(),
       const AssessorsScreen(),
       AssesseesListScreen(key: _assessmentKey, type: 'assessment'),
       AssesseesListScreen(key: _trainingKey, type: 'training'),
       TrainingBatchesScreen(key: _trainingBatchesKey),
-      TesdaBillingScreen(key: _tesdaBillingKey),
       ScholarBillingScreen(key: _scholarBillingKey),
-      MealsComputationScreen(key: _mealsKey),
       const UsersScreen(),
       const ActivityLogsScreen(),
       const DocumentCodeSettingsScreen(),
@@ -103,7 +93,7 @@ class _MainShellState extends State<MainShell> {
             appBar: AppBar(
               title: Text(titles[_selectedIndex]),
               actions: [
-                if (_selectedIndex == 5)
+                if (_selectedIndex == 3)
                   IconButton(
                     icon: const Icon(Icons.refresh),
                     tooltip: 'Refresh records',
@@ -126,22 +116,20 @@ class _MainShellState extends State<MainShell> {
                   _visitedTabs.add(i);
                 });
                 Navigator.pop(context);
-                if (i == 5) {
+                if (i == 3) {
                   _documentRecordsKey.currentState?.load();
-                } else if (i == 6) {
+                } else if (i == 4) {
                   _paymentSlipKey.currentState?.reload();
-                } else if (i == 10) {
+                } else if (i == 6) {
+                  _codeMonitoringKey.currentState?.load();
+                } else if (i == 9) {
                   _assessmentKey.currentState?.load();
-                } else if (i == 11) {
+                } else if (i == 10) {
                   _trainingKey.currentState?.load();
-                } else if (i == 12) {
+                } else if (i == 11) {
                   _trainingBatchesKey.currentState?.load();
-                } else if (i == 13) {
-                  _tesdaBillingKey.currentState?.load();
-                } else if (i == 14) {
+                } else if (i == 12) {
                   _scholarBillingKey.currentState?.load();
-                } else if (i == 15) {
-                  _mealsKey.currentState?.load();
                 }
               },
             ),

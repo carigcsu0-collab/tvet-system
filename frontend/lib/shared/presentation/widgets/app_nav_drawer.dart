@@ -119,16 +119,6 @@ class AppNavDrawer extends StatelessWidget {
           label: Text('Certificate of Appearance'),
         ),
         const NavigationDrawerDestination(
-          icon: Icon(Icons.fact_check_outlined),
-          selectedIcon: Icon(Icons.fact_check),
-          label: Text('Report on Assessment Proceedings'),
-        ),
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.rate_review_outlined),
-          selectedIcon: Icon(Icons.rate_review),
-          label: Text('Performance Evaluation Instrument'),
-        ),
-        const NavigationDrawerDestination(
           icon: Icon(Icons.table_chart_outlined),
           selectedIcon: Icon(Icons.table_chart),
           label: Text("Assessor's Fee"),
@@ -147,6 +137,11 @@ class AppNavDrawer extends StatelessWidget {
           icon: Icon(Icons.track_changes_outlined),
           selectedIcon: Icon(Icons.track_changes),
           label: Text('Document Monitoring'),
+        ),
+        const NavigationDrawerDestination(
+          icon: Icon(Icons.tag_outlined),
+          selectedIcon: Icon(Icons.tag),
+          label: Text('Code Monitoring'),
         ),
 
         const SizedBox(height: 8),
@@ -181,19 +176,9 @@ class AppNavDrawer extends StatelessWidget {
           label: Text('Training Attendance & Billing'),
         ),
         const NavigationDrawerDestination(
-          icon: Icon(Icons.receipt_long_outlined),
-          selectedIcon: Icon(Icons.receipt_long),
-          label: Text('TESDA Billing Monitoring'),
-        ),
-        const NavigationDrawerDestination(
           icon: Icon(Icons.account_balance_wallet_outlined),
           selectedIcon: Icon(Icons.account_balance_wallet),
           label: Text('Scholar Billing Monitoring'),
-        ),
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.restaurant_outlined),
-          selectedIcon: Icon(Icons.restaurant),
-          label: Text('Meals Computation'),
         ),
 
         const SizedBox(height: 8),

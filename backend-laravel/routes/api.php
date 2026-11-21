@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CenterController;
 use App\Http\Controllers\Api\CommunicationPdfController;
 use App\Http\Controllers\Api\CommunicationRecordController;
-use App\Http\Controllers\Api\MealComputationController;
+use App\Http\Controllers\Api\CodeMonitoringController;
 use App\Http\Controllers\Api\DocumentCodeSettingController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DocumentTypeController;
@@ -112,12 +112,10 @@ Route::middleware('api.auth')->group(function () {
     Route::put('/tesda-billings/{tesdaBilling}', [TesdaBillingController::class, 'update']);
     Route::delete('/tesda-billings/{tesdaBilling}', [TesdaBillingController::class, 'destroy']);
     Route::post('/scholar-billings/receive-bank-check', [ScholarBillingController::class, 'receiveBankCheck']);
-    Route::get('/meal-computations', [MealComputationController::class, 'index']);
-    Route::post('/meal-computations', [MealComputationController::class, 'store']);
-    Route::get('/meal-computations/{mealComputation}', [MealComputationController::class, 'show']);
-    Route::put('/meal-computations/{mealComputation}', [MealComputationController::class, 'update']);
-    Route::put('/meal-computations/{mealComputation}/detail', [MealComputationController::class, 'updateDetail']);
-    Route::delete('/meal-computations/{mealComputation}', [MealComputationController::class, 'destroy']);
+    Route::get('/code-monitoring', [CodeMonitoringController::class, 'index']);
+    Route::post('/code-monitoring', [CodeMonitoringController::class, 'store']);
+    Route::put('/code-monitoring/{codeMonitoring}', [CodeMonitoringController::class, 'update']);
+    Route::delete('/code-monitoring/{codeMonitoring}', [CodeMonitoringController::class, 'destroy']);
 
     Route::get('/payment-slips', [PaymentSlipController::class, 'index']);
     Route::post('/payment-slips', [PaymentSlipController::class, 'store']);

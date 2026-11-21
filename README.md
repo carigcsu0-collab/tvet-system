@@ -106,6 +106,8 @@ See `backend-laravel/database/migrations/2024_01_01_000000_create_tvet_tables.ph
 | GET | `/api/v1/documents/:id` | Get record |
 | GET | `/api/v1/documents/:id/download` | Download generated `.docx` |
 | GET | `/api/v1/settings/:key` | Get app setting (e.g. default coordinator) |
+| GET, POST | `/api/v1/code-monitoring` | List or add manually tracked codes |
+| PUT, DELETE | `/api/v1/code-monitoring/:id` | Edit or remove a tracked code |
 
 ---
 
@@ -124,10 +126,18 @@ Assessment Center records can be assigned an AM or PM assessment session;
 an empty session means Whole Day. Use the session filter or bulk update in
 Assessment Centers to manage these records. Scholar Billing Monitoring derives
 assessment bills from assessees marked External - Scholar, grouped by center,
-qualification, assessment date, and assessor. Undated scholars are shown
-separately until an assessment date is entered. Totals use the current center
-fee; confirming bank-check receipt marks the included records' fee as paid.
-Run `php artisan migrate` on the backend before using assessment sessions.
+qualification, assessor, and consecutive assessment dates. Without an assessor,
+different dates remain separate. Undated or invalid dates are shown separately.
+Totals use the current center fee; confirming bank-check receipt marks the
+included records' fee as paid.
+
+Code Monitoring stores manually entered IC, EC, MEMO and CA codes, titles and
+dates independently of generated documents and document code settings.
+
+**Database migration warning:** Running `php artisan migrate` permanently
+deletes the Meals Computation data and its related funds and items tables.
+Back up any data you need before deploying or migrating. Rolling back recreates
+empty tables only; it cannot restore deleted records.
 
 1. `docker-compose up -d` (PostgreSQL).
 2. Set up the Laravel backend:

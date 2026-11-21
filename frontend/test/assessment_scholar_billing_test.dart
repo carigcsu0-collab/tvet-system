@@ -11,7 +11,8 @@ void main() {
     expect(assessmentSessionLabel('PM'), 'PM');
   });
 
-  test('assessment bills contain only external scholars and group by schedule',
+  test(
+      'assessment bills contain only external scholars and group consecutive dates',
       () {
     Map<String, dynamic> record(int id,
             {String category = 'external_scholar',
@@ -45,13 +46,60 @@ void main() {
     expect(
       groups.map((group) => group.map((record) => record['id']).toList()),
       [
-        [1, 2],
-        [3],
+        [1, 2, 3],
         [4],
         [5],
         [9],
         [10],
       ],
     );
+    expect(assessmentScholarDateLabel(groups.first), 'November 20-21, 2026');
+  });
+
+  test(
+      'grouping handles gaps, mixed date formats, month boundaries and invalid dates',
+      () {
+    Map<String, dynamic> record(int id, String? date) => {
+          'id': id,
+          'assessment_candidate_type': 'external_scholar',
+          'assessment_center_id': 1,
+          'center': {'type': 'assessment'},
+          'qualification': 'EIM',
+          'assessment_date': date,
+          'assessor': 'Lorenzo Macababbad',
+        };
+    final groups = assessmentScholarGroups([
+      record(1, '12/1/26'),
+      record(2, '2026-11-30'),
+      record(3, '11/30/26'),
+      record(4, '12/3/26'),
+      record(5, 'not a date'),
+      record(6, 'not a date'),
+      record(7, null),
+      record(8, '11/30/2026'),
+    ]);
+
+    expect(groups.map((group) => group.length), [4, 1, 1, 1, 1]);
+    expect(assessmentScholarDateLabel(groups[0]),
+        'November 30, 2026 - December 1, 2026');
+    expect(assessmentScholarDateLabel(groups[1]), 'December 3, 2026');
+    expect(assessmentScholarDateLabel(groups[2]), 'Invalid date: not a date');
+    expect(assessmentScholarDateLabel(groups[4]), 'Date not set');
+  });
+
+  test('consecutive dates without an assessor are not combined', () {
+    final records = [
+      for (final date in ['11/14/26', '11/15/26'])
+        {
+          'id': date,
+          'assessment_candidate_type': 'external_scholar',
+          'assessment_center_id': 1,
+          'center': {'type': 'assessment'},
+          'qualification': 'EIM',
+          'assessment_date': date,
+          'assessor': '',
+        },
+    ];
+    expect(assessmentScholarGroups(records).length, 2);
   });
 }

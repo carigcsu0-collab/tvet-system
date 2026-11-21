@@ -65,11 +65,6 @@ class ScholarBillingScreenState extends State<ScholarBillingScreen> {
     return '$peso${NumberFormat('#,##0.00', 'en_US').format(amount)}';
   }
 
-  String _dateLabel(dynamic value) {
-    final text = value?.toString().trim() ?? '';
-    return text.isEmpty ? 'Date not set' : text;
-  }
-
   String _trainingDateLabel(Map<String, dynamic> batch) {
     String format(dynamic value) {
       final date = DateTime.tryParse(value?.toString() ?? '');
@@ -118,7 +113,7 @@ class ScholarBillingScreenState extends State<ScholarBillingScreen> {
         final assessee = scholars.first;
         final center = Map<String, dynamic>.from(assessee['center'] as Map);
         final qualification = assessee['qualification']?.toString() ?? '';
-        final date = _dateLabel(assessee['assessment_date']);
+        final date = assessmentScholarDateLabel(scholars);
         final assessor = assessee['assessor']?.toString() ?? '';
         final key = 'assessment:${assessee['id']}';
         groups[key] = _BillingGroup(
@@ -235,7 +230,7 @@ class ScholarBillingScreenState extends State<ScholarBillingScreen> {
                 title: 'Scholar Billing Monitoring',
                 subtitle: _trainingMode
                     ? 'Training scholar fees by center and training batch'
-                    : 'External scholar assessment fees by date and assessor',
+                    : 'External scholar assessment fees by consecutive dates and assessor',
                 trailing: IconButton(
                   onPressed: load,
                   tooltip: 'Refresh billing',
